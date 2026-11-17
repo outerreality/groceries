@@ -153,6 +153,8 @@
   .secrow .num{flex:none;width:28px;color:var(--muted);font-size:14px}
   .arrow{width:44px;height:44px;border-radius:12px;border:0;background:var(--chip);display:flex;align-items:center;justify-content:center}
   .arrow:disabled{opacity:.3}
+  .totop{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));z-index:30;width:46px;height:46px;border-radius:50%;border:1px solid var(--edge);background:var(--card);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,.35);padding:0}
+  body.topbtn .status{bottom:calc(74px + env(safe-area-inset-bottom))}
   .status{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);border:0;max-width:92vw;text-align:center;background:var(--dangerfill);color:var(--dangertext);font-size:13px;padding:8px 14px;border-radius:999px;}
   .loading{padding:80px 0;text-align:center;color:var(--muted);font-size:15px}
   .namebtn{width:100%;min-height:56px;display:flex;align-items:center;gap:12px;background:none;border:0;border-top:1px solid var(--line);padding:0;font-size:17px;text-align:left}
@@ -162,6 +164,7 @@
 </head>
 <body>
 <main class="app" id="app"><div class="loading">Loading Your List…</div></main>
+<button class="totop hide" id="toTop" data-act="toTop" aria-label="Back To Top"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="stroke:var(--text)"><path d="M12 19V6M6 11l6-6 6 6"/></svg></button>
 <button class="status hide" id="status" data-act="retry">Offline · Changes Will Sync</button>
 
 <script>
@@ -1230,11 +1233,17 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
 
   function rIng() {
     if (!st.meals[ui.ingMealId]) { go('main'); return; }
-    var sel = ui.ingSel.filter(function (p) { return st.items[p[0]]; });
+    var sel = ui.ingSel.filter(function (p) { return st.items[p[0]]; })
+      .sort(function (a, b) { return st.items[a[0]].name.localeCompare(st.items[b[0]].name); });
     $('ingChosen').innerHTML = '<div class="sechead"><h3>In This Meal</h3><span>' + sel.length + '</span></div>' + (sel.length ? sel.map(function (p) {
-      return '<div class="row"><button class="rowmain" data-act="ingToggle" data-id="' + p[0] + '"><span class="box on" aria-hidden="true">' + I.check + '</span><span class="nm">' + esc(st.items[p[0]].name) + '</span></button>' +
-        '<div class="stepper"><button class="sb" data-act="ingDec" data-id="' + p[0] + '" aria-label="Decrease Quantity">' + I.dec + '</button><span class="sn" style="display:flex;align-items:center;justify-content:center">' + p[1] + '</span>' +
-        '<button class="sb" data-act="ingInc" data-id="' + p[0] + '" aria-label="Increase Quantity">' + I.incG + '</button></div></div>';
+      var id = p[0], name = st.items[id].name;
+      var right = ui.rmArmed === id
+        ? '<button class="rmpill" data-act="ingRm" data-id="' + id + '" aria-label="Tap Again To Remove ' + esc(name) + ' From This Meal">Remove</button>'
+        : '<div class="qty' + (ui.hot === id ? ' hot' : '') + '">' +
+          '<button class="qb" data-act="ingDec" data-id="' + id + '" aria-label="' + (p[1] <= 1 ? 'Remove ' : 'One Less ') + esc(name) + '">' + I.dec + '</button>' +
+          '<span class="qn' + (p[1] > 1 ? ' many' : '') + '">' + p[1] + '</span>' +
+          '<button class="qb up" data-act="ingInc" data-id="' + id + '" aria-label="One More ' + esc(name) + '">' + I.incG + '</button></div>';
+      return '<div class="row"><button class="rowmain" data-act="ingToggle" data-id="' + id + '"><span class="box on" aria-hidden="true">' + I.check + '</span><span class="nm">' + esc(name) + '</span></button>' + right + '</div>';
     }).join('') : '<div class="empty">Tap Items Below To Add Them</div>');
     $('deleteMealBtn').textContent = armed('delMeal') ? 'Tap Again To Delete Meal' : 'Delete Meal';
     $('deleteMealBtn').classList.toggle('armed', armed('delMeal'));
@@ -1247,8 +1256,7 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
       .sort(function (a, b) { return st.items[a].name.localeCompare(st.items[b].name); });
     var shown = ids.slice(0, q ? 60 : 300);
     $('ingAll').innerHTML = '<div class="sechead"><h3>' + (q ? 'Matches' : 'All Items') + '</h3><span>' + ids.length + '</span></div>' + (shown.length ? shown.map(function (id) {
-      return '<button class="listbtn" data-act="ingToggle" data-id="' + id + '"><span class="box" aria-hidden="true"></span><span class="grow">' + esc(st.items[id].name) +
-        '<small>' + esc(st.items[id].sec) + '</small></span></button>';
+      return '<button class="listbtn" data-act="ingToggle" data-id="' + id + '"><span class="box" aria-hidden="true"></span><span class="grow">' + esc(st.items[id].name) + '</span></button>';
     }).join('') : '<div class="empty">No Other Matches. New Items Can Be Added From The List Screen.</div>');
   }
 
@@ -1337,6 +1345,7 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
     addClose: function () { ui.addOpen = false; ui.addText = ''; $('addInput').value = ''; $('addInput').blur(); rSuggest(); render(); },
     mode: function (b) { savePref('mode', b.dataset.mode); render(); },
     reload: function () { window.location.reload(); },
+    toTop: function () { window.scrollTo({ top: 0, behavior: reduceMotion ? 'auto' : 'smooth' }); },
     appReset: function () { if (window.APP_RESET) { window.APP_RESET(); } },
     retry: function () { fails = 0; setStatus(''); if (pending.length) { flush(); } else { poll(); } },
     clearLog: function () { lsSet('errlog', []); render(); },
@@ -1413,10 +1422,17 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
       if (selN(id)) { ui.ingSel = ui.ingSel.filter(function (p) { return p[0] !== id; }); } else { ui.ingSel.push([id, 1]); }
       rIng();
     },
-    ingInc: function (b) { var p = selN(b.dataset.id); if (p) { p[1]++; rIng(); } },
-    ingDec: function (b) { var p = selN(b.dataset.id); if (p && p[1] > 1) { p[1]--; rIng(); } },
+    ingInc: function (b) { var p = selN(b.dataset.id); if (p) { warm(p[0]); p[1]++; rIng(); } },
+    ingDec: function (b) {
+      var p = selN(b.dataset.id);
+      if (!p) { return; }
+      if (p[1] <= 1) { armRemove(p[0]); return; }
+      warm(p[0]); p[1]--; rIng();
+    },
+    ingRm: function (b) { var id = b.dataset.id; ui.rmArmed = null; ui.ingSel = ui.ingSel.filter(function (p) { return p[0] !== id; }); rIng(); },
     saveIng: function () {
       var id = ui.ingMealId;
+      ui.ingSel.sort(function (a, b) { return (st.items[a[0]] ? st.items[a[0]].name : '').localeCompare(st.items[b[0]] ? st.items[b[0]].name : ''); });
       send({ type: 'saveMeal', mealId: id, name: GL.titleCase(ui.ingName) || st.meals[id].name, ing: ui.ingSel });
       if (ui.ingBack === 'addMeal') {
         ui.ticks = {};
@@ -1458,9 +1474,9 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
 
   document.addEventListener('click', function (e) {
     var b = e.target.closest('[data-act]');
-    if (ui.rmArmed && (!b || b.dataset.act !== 'rmItem')) {
+    if (ui.rmArmed && (!b || (b.dataset.act !== 'rmItem' && b.dataset.act !== 'ingRm'))) {
       ui.rmArmed = null;
-      if (!b || b.dataset.act === 'check') { render(); return; }
+      if (!b || b.dataset.act === 'check' || b.dataset.act === 'ingToggle') { render(); return; }
     }
     if (!b || b.disabled || animating) { return; }
     var fn = acts[b.dataset.act];
@@ -1535,6 +1551,14 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
   }
   document.addEventListener('touchend', endSwipe);
   document.addEventListener('touchcancel', endSwipe);
+
+  // Back To Top button: shows once you've scrolled well down a long list.
+  function checkTop() {
+    var hide = window.scrollY < 700 || !!ui.addOpen;
+    $('toTop').classList.toggle('hide', hide);
+    document.body.classList.toggle('topbtn', !hide);
+  }
+  window.addEventListener('scroll', checkTop, { passive: true });
 
   var hiddenAt = 0;
   document.addEventListener('visibilitychange', function () {
