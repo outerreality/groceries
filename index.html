@@ -492,6 +492,8 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
     history.replaceState(null, '', location.pathname + location.search);
   }
   var cfg = readCfg();
+  // Lets the app forget its connection (from the loading screen) so a new setup link or code can be used.
+  window.APP_RESET = function () { try { localStorage.removeItem(CFG); } catch (e) {} location.reload(); };
   // A setup link opened while the app is already showing: start over with it.
   window.addEventListener('hashchange', function () { if (/setup=/.test(location.hash)) { location.reload(); } });
 
@@ -1292,6 +1294,7 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
     addClose: function () { ui.addOpen = false; ui.addText = ''; $('addInput').value = ''; $('addInput').blur(); rSuggest(); render(); },
     mode: function (b) { savePref('mode', b.dataset.mode); render(); },
     reload: function () { window.location.reload(); },
+    appReset: function () { if (window.APP_RESET) { window.APP_RESET(); } },
     retry: function () { fails = 0; setStatus(''); if (pending.length) { flush(); } else { poll(); } },
     clearLog: function () { lsSet('errlog', []); render(); },
     theme: function (b) { setTheme({ id: b.dataset.id }, true); },
@@ -1512,7 +1515,8 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
       .withFailureHandler(function (err) {
         clearTimeout(timer);
         logError('Load', String((err && err.message) || '(No Message)'));
-        $('app').innerHTML = '<div class="loading">Couldn\'t Load The List Yet. Trying Again…<br><small>' + esc(err && err.message) + '</small></div>';
+        $('app').innerHTML = '<div class="loading">Couldn\'t Load The List Yet. Trying Again…<br><small>' + esc(err && err.message) + '</small>' +
+          (window.APP_RESET ? '<br><br><button class="link" data-act="appReset">Use A Different Setup Code</button>' : '') + '</div>';
         setTimeout(function () { fetchStart(tries + 1); }, 2500);
       })
       .getState(0);
