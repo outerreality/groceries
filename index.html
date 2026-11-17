@@ -153,6 +153,10 @@
   .secrow .num{flex:none;width:28px;color:var(--muted);font-size:14px}
   .arrow{width:44px;height:44px;border-radius:12px;border:0;background:var(--chip);display:flex;align-items:center;justify-content:center}
   .arrow:disabled{opacity:.3}
+  .mealrow{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line)}
+  .card>.mealrow:first-child{border-top:0}
+  .mealrow .listbtn{border-top:0;flex:1;min-width:0}
+  .mealedit{flex:none;min-height:52px;padding:0 4px 0 12px}
   .totop{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(18px + env(safe-area-inset-bottom));z-index:30;width:46px;height:46px;border-radius:50%;border:1px solid var(--edge);background:var(--card);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 20px rgba(0,0,0,.35);padding:0}
   body.topbtn .status{bottom:calc(74px + env(safe-area-inset-bottom))}
   .status{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);border:0;max-width:92vw;text-align:center;background:var(--dangerfill);color:var(--dangertext);font-size:13px;padding:8px 14px;border-radius:999px;}
@@ -1184,8 +1188,9 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
     }
     html += ids.map(function (m) {
       var n = st.meals[m].ing.length;
-      return '<button class="listbtn" data-act="pickMeal" data-id="' + m + '"><span class="grow">' + esc(st.meals[m].name) +
-        '<small>' + (n ? n + (n === 1 ? ' Ingredient' : ' Ingredients') : 'No Ingredients Yet') + '</small></span>' + I.right + '</button>';
+      return '<div class="mealrow"><button class="listbtn" data-act="pickMeal" data-id="' + m + '"><span class="grow">' + esc(st.meals[m].name) +
+        '<small>' + (n ? n + (n === 1 ? ' Ingredient' : ' Ingredients') : 'No Ingredients Yet') + '</small></span></button>' +
+        '<button class="link mealedit" data-act="editMeal" data-id="' + m + '" aria-label="Edit ' + esc(st.meals[m].name) + '">Edit</button></div>';
     }).join('') + addRow;
     if (!html) { html = '<div class="empty">' + (q ? 'Already On This Week\'s List' : 'Every Saved Meal Is On This Week\'s List') + '</div>'; }
     $('savedMeals').innerHTML = html;
@@ -1416,7 +1421,8 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
     openMeal: function (b) { ui.viewMealId = b.dataset.id; go('meal', -1); },
     removeMeal: function () { if (armed('rm')) { send({ type: 'removeMeal', mealId: ui.viewMealId }); go('main', 1); } else { arm('rm'); } },
     editIng: function (b) { openIng(b.dataset.from === 'meal' ? ui.viewMealId : ui.addMealId, b.dataset.from); },
-    ingBack: function () { go(ui.ingBack === 'addMeal' ? 'addMeal' : ui.ingBack === 'meal' ? 'meal' : 'main', 1); },
+    ingBack: function () { go(ui.ingBack === 'addMeal' ? 'addMeal' : ui.ingBack === 'meal' ? 'meal' : ui.ingBack === 'picker' ? 'picker' : 'main', 1); },
+    editMeal: function (b) { openIng(b.dataset.id, 'picker'); },
     ingToggle: function (b) {
       var id = b.dataset.id;
       if (selN(id)) { ui.ingSel = ui.ingSel.filter(function (p) { return p[0] !== id; }); } else { ui.ingSel.push([id, 1]); }
@@ -1439,9 +1445,9 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
         ui.ingSel.forEach(function (p) { ui.ticks[p[0]] = true; });
         ui.addMealId = id;
         go(ui.ingSel.length ? 'addMeal' : 'picker', 1);
-      } else { go(ui.ingBack === 'meal' ? 'meal' : 'main', 1); }
+      } else { go(ui.ingBack === 'meal' ? 'meal' : ui.ingBack === 'picker' ? 'picker' : 'main', 1); }
     },
-    deleteMeal: function () { if (armed('delMeal')) { send({ type: 'deleteMeal', mealId: ui.ingMealId }); go('main', 1); } else { arm('delMeal'); } },
+    deleteMeal: function () { if (armed('delMeal')) { send({ type: 'deleteMeal', mealId: ui.ingMealId }); go(ui.ingBack === 'picker' ? 'picker' : 'main', 1); } else { arm('delMeal'); } },
     secUp: function (b) { moveSec(+b.dataset.i, -1); },
     secDown: function (b) { moveSec(+b.dataset.i, 1); },
     changeName: function () { me = ''; lsSet('me', ''); setUrlName(''); built = null; render(); },
