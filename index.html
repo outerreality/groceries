@@ -636,11 +636,40 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
     };
   }
   var themeDark = true;
+  /* Surprise Me: a different look each time the app opens. "shuffle" picks one of the ready-made looks;
+     "mix" invents a new dark background with a matching bright highlight. */
+  var sessionLook = null;
+  function hslHex(h, s, l) {
+    h = ((h % 360) + 360) % 360; s /= 100; l /= 100;
+    var k = function (n) { return (n + h / 30) % 12; }, a = s * Math.min(l, 1 - l);
+    var f = function (n) { return l - a * Math.max(-1, Math.min(k(n) - 3, Math.min(9 - k(n), 1))); };
+    return hex([f(0) * 255, f(8) * 255, f(4) * 255]);
+  }
+  function makeLook(t) {
+    var last = lsGet('lastLook', '');
+    if (t.id === 'shuffle') {
+      var pool = THEMES.filter(function (x) { return (t.light || themeVars(x.bg, x.accent, 'auto').isDark) && x.id !== last; });
+      var pick = pool[Math.floor(Math.random() * pool.length)] || THEMES[0];
+      lsSet('lastLook', pick.id);
+      return { kind: 'shuffle', light: !!t.light, id: pick.id, name: pick.name, bg: pick.bg, accent: pick.accent };
+    }
+    var h = Math.random() * 360;
+    var schemes = [180, 150, 210, 120, 240, 40, -40];
+    var ah = h + schemes[Math.floor(Math.random() * schemes.length)] + (Math.random() * 20 - 10);
+    lsSet('lastLook', 'mix');
+    return { kind: 'mix', name: 'A New Mix', bg: hslHex(h, 22 + Math.random() * 22, 6.5 + Math.random() * 4.5), accent: hslHex(ah, 62 + Math.random() * 26, 58 + Math.random() * 10) };
+  }
+  function isSurprise(t) { return !!t && (t.id === 'shuffle' || t.id === 'mix'); }
+
   function applyTheme(t) {
     t = t || {};
     var base = THEMES.filter(function (x) { return x.id === t.id; })[0] || THEMES[0];
     var bg = t.id === 'custom' ? (t.bg || base.bg) : base.bg;
     var accent = t.id === 'custom' ? (t.accent || base.accent) : base.accent;
+    if (isSurprise(t)) {
+      if (!sessionLook || sessionLook.kind !== t.id || (t.id === 'shuffle' && sessionLook.light !== !!t.light)) { sessionLook = makeLook(t); }
+      bg = sessionLook.bg; accent = sessionLook.accent;
+    }
     var v = themeVars(bg, accent, t.id === 'custom' ? t.text : 'auto');
     themeDark = v.isDark;
     var root = document.documentElement.style;
@@ -1229,9 +1258,22 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
     var html = '<div class="themes">' + THEMES.map(function (x) {
       return '<button class="theme' + (t.id === x.id ? ' on' : '') + '" data-act="theme" data-id="' + x.id + '" aria-label="' + x.name + ' Colors">' +
         '<span class="dot" style="background:' + x.bg + '"><i style="background:' + x.accent + '"></i></span>' + x.name + '</button>';
-    }).join('') + '</div>';
+    }).join('') +
+      '<button class="theme' + (t.id === 'shuffle' ? ' on' : '') + '" data-act="theme" data-id="shuffle" aria-label="Shuffle The Looks Each Time">' +
+      '<span class="dot" style="background:conic-gradient(#0B1622 0 25%,#17111C 0 50%,#1A1210 0 75%,#1C1216 0)"><i style="background:conic-gradient(#4FB3FF 0 25%,#C792EA 0 50%,#FF9F5A 0 75%,#FF7AA8 0)"></i></span>Shuffle</button>' +
+      '<button class="theme' + (t.id === 'mix' ? ' on' : '') + '" data-act="theme" data-id="mix" aria-label="A New Color Mix Each Time">' +
+      '<span class="dot" style="background:conic-gradient(from 30deg,#1E1430,#10202A,#1E2614,#2A1A12,#1E1430)"><i style="background:conic-gradient(#FF7AA8,#FFD166,#7BE08A,#4FB3FF,#C792EA,#FF7AA8)"></i></span>New Mix</button>' +
+      '</div>';
+    if (isSurprise(t) && sessionLook) {
+      html += '<div class="custom"><div class="textrow"><span>This Time: <b style="color:var(--text)">' + esc(sessionLook.name) + '</b></span>' +
+        '<span style="display:flex;gap:6px"><button class="link" data-act="anotherLook">Try Another</button><button class="link" data-act="keepLook">Keep This</button></span></div>' +
+        (t.id === 'shuffle' ? '<button class="switchrow setrow" data-act="lightLooks" role="switch" aria-checked="' + !!t.light + '" style="min-height:44px;font-size:14px;color:var(--muted)"><span>Include Light Looks</span>' +
+          '<span class="sw' + (t.light ? ' on' : '') + '" aria-hidden="true"><i></i></span></button>' : '') +
+        '<div class="sub" style="font-size:13px">A New Look Each Time You Open The App</div></div>';
+    }
     var cur = THEMES.filter(function (x) { return x.id === t.id; })[0];
-    var cbg = t.id === 'custom' ? t.bg : (cur || THEMES[0]).bg, cac = t.id === 'custom' ? t.accent : (cur || THEMES[0]).accent;
+    var cbg = t.id === 'custom' ? t.bg : (isSurprise(t) && sessionLook ? sessionLook.bg : (cur || THEMES[0]).bg);
+    var cac = t.id === 'custom' ? t.accent : (isSurprise(t) && sessionLook ? sessionLook.accent : (cur || THEMES[0]).accent);
     var mode = t.id === 'custom' ? (t.text || 'auto') : 'auto';
     html += '<div class="custom"><h4>' + (t.id === 'custom' ? 'Custom Colors' : 'Make Your Own') + '</h4><div class="pickers">' +
       '<label class="picker"><input type="color" data-theme="bg" value="' + cbg.toLowerCase() + '">Background</label>' +
@@ -1246,6 +1288,7 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
   function customFrom() {
     var t = prefs.theme || {};
     if (t.id === 'custom') { return { id: 'custom', bg: t.bg, accent: t.accent, text: t.text || 'auto' }; }
+    if (isSurprise(t) && sessionLook) { return { id: 'custom', bg: sessionLook.bg, accent: sessionLook.accent, text: 'auto' }; }
     var cur = THEMES.filter(function (x) { return x.id === t.id; })[0] || THEMES[0];
     return { id: 'custom', bg: cur.bg, accent: cur.accent, text: 'auto' };
   }
@@ -1297,7 +1340,17 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
     appReset: function () { if (window.APP_RESET) { window.APP_RESET(); } },
     retry: function () { fails = 0; setStatus(''); if (pending.length) { flush(); } else { poll(); } },
     clearLog: function () { lsSet('errlog', []); render(); },
-    theme: function (b) { setTheme({ id: b.dataset.id }, true); },
+    theme: function (b) {
+      var id = b.dataset.id, cur = prefs.theme || {};
+      if (isSurprise({ id: id })) { sessionLook = null; }
+      setTheme(id === 'shuffle' ? { id: 'shuffle', light: cur.id === 'shuffle' ? !!cur.light : false } : { id: id }, true);
+    },
+    anotherLook: function () { sessionLook = null; applyTheme(prefs.theme); render(); },
+    keepLook: function () {
+      if (!sessionLook) { return; }
+      setTheme(sessionLook.kind === 'shuffle' ? { id: sessionLook.id } : { id: 'custom', bg: sessionLook.bg, accent: sessionLook.accent, text: 'auto' }, true);
+    },
+    lightLooks: function () { var t = prefs.theme || {}; sessionLook = null; setTheme({ id: 'shuffle', light: !t.light }, true); },
     textMode: function (b) { var t = customFrom(); t.text = b.dataset.mode; setTheme(t, true); },
     headings: function () { savePref('headings', !prefs.headings); render(); },
     meals: function () { savePref('mealsOpen', !prefs.mealsOpen); render(); },
@@ -1483,7 +1536,11 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
   document.addEventListener('touchend', endSwipe);
   document.addEventListener('touchcancel', endSwipe);
 
+  var hiddenAt = 0;
   document.addEventListener('visibilitychange', function () {
+    if (document.hidden) { hiddenAt = Date.now(); return; }
+    // Surprise Me: coming back to the app after 10 minutes or more counts as opening it again.
+    if (isSurprise(prefs.theme) && hiddenAt && Date.now() - hiddenAt > 10 * 60 * 1000) { sessionLook = null; applyTheme(prefs.theme); render(); }
     if (!document.hidden) { fails = 0; polling = false; if (pending.length) { flush(); } else { poll(); } }
   });
   setInterval(poll, 2500);
