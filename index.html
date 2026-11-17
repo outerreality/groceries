@@ -1,0 +1,1533 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0E1013">
+<title>Groceries</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/png" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Groceries">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#0E1013;--card:#171A1F;--line:#22262C;--edge:#2A2F37;--text:#EDEFF3;--muted:#9AA1AD;--dim:#8A919C;--accent:#5EDB9A;--ink:#0E1013;--seg:#2C323B;--chip:#22262C;--warn:#F2B06A;--danger:#FF9A8A;--dangeredge:#4A2A2A;--dangerfill:#3A1E1E;--dangertext:#FFD0C8;--ring:#6B7380;--faint:#474E58;--qn:#5F6670;--swoff:#3A404A;--knob:#C9CED6;--cart:#13161A;--cartline:#1E2127;--pill:#183126}
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{overflow-x:hidden;margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;-webkit-text-size-adjust:100%}
+  button,input,select{font-family:inherit;font-size:inherit;color:inherit}
+  button{cursor:pointer}
+  input::placeholder{color:var(--dim)}
+  .app{width:100%;max-width:480px;margin:0 auto;min-height:100vh;padding:calc(20px + env(safe-area-inset-top)) 16px calc(32px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:18px;overflow-x:hidden}
+  .hide{display:none!important}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:4px 4px 0}
+  .top h1{margin:0;font-size:28px;font-weight:700;letter-spacing:-.01em}
+  .sub{font-size:14px;color:var(--muted)}
+  .brand{display:flex;align-items:center;gap:14px;min-width:0}
+  .carrot{flex:none;display:block}
+  .people{display:flex;align-items:center}
+  .av{width:32px;height:32px;border-radius:50%;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px var(--bg)}
+  .people .av+.av{margin-left:-8px}
+  .av.sm{width:24px;height:24px;font-size:12px;box-shadow:none;flex:none}
+  .iconbtn{width:44px;height:44px;flex:none;background:none;border:0;display:flex;align-items:center;justify-content:center;padding:0}
+  .card{background:var(--card);border-radius:16px;padding:4px 14px}
+  .card.pad{padding:4px 14px 8px}
+  .mealhead{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .mealtoggle{flex:1;min-height:48px;display:flex;align-items:center;gap:8px;background:none;border:0;padding:0;text-align:left}
+  .mealtoggle b{font-size:15px;font-weight:600}
+  .link{background:none;border:0;color:var(--accent);font-size:14px;font-weight:600;min-height:44px;padding:0 4px}
+  .chips{display:flex;flex-wrap:wrap;gap:8px;padding:2px 0 14px}
+  .chip{background:var(--chip);border:0;border-radius:999px;padding:0 14px;min-height:40px;font-size:14px}
+  .empty{padding:14px 0;font-size:15px;color:var(--muted)}
+  .chips .empty{padding:4px 0 2px}
+  .addrow{display:flex;gap:8px}
+  .addrow .field{flex:1}
+  .field{flex:none;min-width:0;display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--edge);border-radius:14px;padding:0 14px;min-height:52px}
+  .field input{flex:1;min-width:0;width:100%;background:none;border:0;outline:none;font-size:16px}
+  .sq{flex:none;width:52px;min-height:52px;background:var(--card);border:1px solid var(--edge);border-radius:14px;display:flex;align-items:center;justify-content:center}
+  .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
+  .ctrl{position:relative}
+  .suggest{position:absolute;left:0;right:0;bottom:calc(100% + 8px);z-index:20;display:flex;flex-direction:column-reverse;border:1px solid var(--edge);box-shadow:0 -8px 28px rgba(0,0,0,.35)}
+  .sugg{width:100%;min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:none;border:0;border-bottom:1px solid var(--line);padding:0;text-align:left;font-size:16px}
+  .sugg:first-child{border-bottom:0}
+  .tag{font-size:13px;color:var(--muted);flex:none}
+  .tag.go{color:var(--accent);font-weight:600}
+  .seg{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px;background:var(--card);border-radius:12px;padding:4px}
+  .seg.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .seg button{min-height:44px;border:0;border-radius:9px;background:none;color:var(--muted);font-size:15px;font-weight:500}
+  .seg button.on{background:var(--seg);color:var(--text);font-weight:600}
+  .ctrl{display:flex;align-items:center;gap:8px;margin-top:-4px}
+  .ctrlbtns{display:flex;gap:8px;margin-left:auto;flex:none}
+  .sq.sm{width:46px;min-height:46px;border-radius:12px}
+  .addfield{flex:1;min-width:0;display:flex}
+  .addfield .field{flex:1;min-height:46px;padding-right:4px}
+  .ctrl.adding #seg,.ctrl.adding #addOpenBtn{display:none}
+  .ctrl:not(.adding) .addfield{display:none}
+  .xbtn{flex:none;width:40px;height:40px;background:none;border:0;display:flex;align-items:center;justify-content:center;padding:0}
+  .qty{display:flex;align-items:center;flex:none;margin-right:-8px}
+  .qb{width:36px;height:48px;background:none;border:0;display:flex;align-items:center;justify-content:center;padding:0}
+  .qb svg{stroke:var(--faint)!important;transition:stroke .2s}
+  .qty.hot .qb svg{stroke:var(--text)!important}
+  .qty.hot .qb.up svg{stroke:var(--accent)!important}
+  .qb:disabled{opacity:.4}
+  .rmpill{flex:none;min-height:36px;margin:8px 0;padding:0 16px;border-radius:999px;border:1px solid var(--dangeredge);background:var(--dangerfill);color:var(--dangertext);font-size:14px;font-weight:600}
+  .qn{min-width:18px;text-align:center;font-size:14px;color:var(--qn);transition:color .2s}
+  .qn.many{color:var(--muted);font-weight:600}
+  .qty.hot .qn{color:var(--text)}
+  .themes{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;padding:12px 0 8px}
+  .theme{display:flex;flex-direction:column;align-items:center;gap:6px;background:none;border:0;padding:6px 0;font-size:12px;color:var(--muted)}
+  .theme .dot{width:44px;height:44px;border-radius:50%;border:2px solid var(--edge);display:flex;align-items:center;justify-content:center;position:relative}
+  .theme .dot i{width:16px;height:16px;border-radius:50%}
+  .theme.on{color:var(--text);font-weight:600}
+  .theme.on .dot{box-shadow:0 0 0 3px var(--card),0 0 0 5px var(--accent)}
+  .custom{border-top:1px solid var(--line);padding:12px 0 14px;display:flex;flex-direction:column;gap:12px}
+  .custom h4{margin:0;font-size:14px;font-weight:600}
+  .pickers{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .picker{display:flex;align-items:center;gap:10px;min-height:52px;background:var(--bg);border:1px solid var(--edge);border-radius:12px;padding:0 10px;font-size:14px}
+  .picker input{width:32px;height:32px;border:0;padding:0;background:none;border-radius:8px;flex:none}
+  .picker input::-webkit-color-swatch-wrapper{padding:0}
+  .picker input::-webkit-color-swatch{border:1px solid var(--edge);border-radius:8px}
+  .seg.sm.three-sm{grid-template-columns:repeat(3,auto);flex:none;white-space:nowrap}
+  .textrow{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;color:var(--muted)}
+  .setrow{margin:0;min-height:52px;color:var(--text);font-size:16px}
+  .seg.sm{display:inline-grid;grid-template-columns:auto auto;gap:2px;padding:3px;border-radius:11px}
+  .seg.sm button{min-height:40px;padding:0 16px;font-size:14px;border-radius:8px}
+  .switchrow.sm{width:auto;margin:0 0 0 auto;gap:10px;min-height:44px;padding:0 2px}
+  .savebtn{flex:none;min-height:52px;padding:0 22px;border:0;border-radius:14px;background:var(--accent);color:var(--ink);font-size:16px;font-weight:700}
+  .switchrow{display:flex;align-items:center;justify-content:space-between;min-height:44px;margin:-10px 0 -6px;padding:0 4px;background:none;border:0;color:var(--muted);font-size:14px;width:100%}
+  .sw{width:40px;height:24px;border-radius:999px;background:var(--swoff);display:flex;align-items:center;padding:2px;justify-content:flex-start}
+  .sw i{width:20px;height:20px;border-radius:50%;background:var(--knob)}
+  .sw.on{background:var(--accent);justify-content:flex-end}
+  .sw.on i{background:var(--ink)}
+  .sechead{display:flex;align-items:center;justify-content:space-between;padding:16px 0 6px}
+  .sechead h3{margin:0;font-size:13px;font-weight:600;color:var(--accent);letter-spacing:.06em;text-transform:uppercase}
+  .sechead.grey h3{color:var(--muted)}
+  .sechead span{font-size:13px;color:var(--muted)}
+  .row{display:flex;align-items:center;gap:8px;border-top:1px solid var(--line)}
+  .sechead+.row,.card>.row:first-child{border-top:0}
+  .rowmain{flex:1;min-width:0;min-height:52px;display:flex;align-items:center;gap:14px;background:none;border:0;padding:0;text-align:left}
+  .circle{width:22px;height:22px;border-radius:50%;border:2px solid var(--ring);flex:none}
+  .nm{font-size:16px;display:flex;flex-direction:column;gap:2px;padding:6px 0;min-width:0}
+  .nm small{font-size:13px;color:var(--muted)}
+  .stepper{display:flex;align-items:center;gap:2px;background:var(--chip);border-radius:999px;padding:3px;flex:none}
+  .stepper .sb{width:38px;height:38px;border-radius:50%;border:0;background:var(--seg);display:flex;align-items:center;justify-content:center}
+  .stepper .sn{min-width:44px;height:38px;border:0;background:none;text-align:center;font-size:15px;font-weight:600;padding:0 4px}
+  .cart{background:var(--cart);border:1px solid var(--line);border-radius:16px;padding:4px 14px}
+  .cart .row{border-top-color:var(--cartline)}
+  .cart .rowmain{min-height:48px;color:var(--dim)}
+  .cart .nm{text-decoration:line-through}
+  .done{width:22px;height:22px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;flex:none}
+  .head2{display:flex;align-items:center;gap:6px;padding-top:2px}
+  .head2 h1{margin:0;font-size:24px;font-weight:700}
+  .head2 .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+  .head2 .iconbtn:first-child{margin-left:-10px}
+  .pill{display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:var(--accent);background:var(--pill);border-radius:999px;padding:5px 10px 5px 8px;flex:none}
+  .plus{width:30px;height:30px;border-radius:50%;border:2px solid var(--ring);display:flex;align-items:center;justify-content:center;flex:none}
+  .listbtn{width:100%;min-height:52px;display:flex;align-items:center;gap:12px;background:none;border:0;border-top:1px solid var(--line);padding:0;text-align:left}
+  .sechead+.listbtn,.card>.listbtn:first-child{border-top:0}
+  .listbtn .grow{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px;font-size:16px;padding:6px 0}
+  .listbtn .grow small{font-size:13px;color:var(--muted)}
+  .listbtn .grow small.warn{color:var(--warn)}
+  .box{width:22px;height:22px;border-radius:6px;border:2px solid var(--ring);flex:none}
+  .box.on{border:0;background:var(--accent);display:flex;align-items:center;justify-content:center}
+  .big{min-height:52px;border:0;border-radius:14px;background:var(--accent);color:var(--ink);font-size:16px;font-weight:700;width:100%}
+  .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .ghost{min-height:52px;border:1px solid var(--edge);border-radius:14px;background:var(--card);font-size:15px;font-weight:600}
+  .ghost.danger{border-color:var(--dangeredge);color:var(--danger)}
+  .ghost.armed{background:var(--dangerfill);color:var(--dangertext)}
+  .editor{border-top:1px solid var(--line);padding:12px 0 14px;display:flex;flex-direction:column;gap:10px}
+  .sechead+.editor{border-top:0}
+  .editor input,.editor select{width:100%;min-height:48px;background:var(--bg);border:1px solid var(--edge);border-radius:12px;padding:0 12px;font-size:16px;outline:none}
+  .editor select{appearance:none;-webkit-appearance:none}
+  .editor .btns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+  .editor .btns button{min-height:44px;border-radius:12px;border:1px solid var(--edge);background:var(--card);font-size:14px;font-weight:600}
+  .editor .btns .save{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+  .editor .btns .del{color:var(--danger);border-color:var(--dangeredge)}
+  .editor .btns .del.armed{background:var(--dangerfill);color:var(--dangertext)}
+  .secrow{display:flex;align-items:center;gap:6px;border-top:1px solid var(--line);min-height:52px}
+  .card>.secrow:first-child{border-top:0}
+  .secrow span{flex:1;font-size:16px}
+  .secrow .num{flex:none;width:28px;color:var(--muted);font-size:14px}
+  .arrow{width:44px;height:44px;border-radius:12px;border:0;background:var(--chip);display:flex;align-items:center;justify-content:center}
+  .arrow:disabled{opacity:.3}
+  .status{position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);border:0;max-width:92vw;text-align:center;background:var(--dangerfill);color:var(--dangertext);font-size:13px;padding:8px 14px;border-radius:999px;}
+  .loading{padding:80px 0;text-align:center;color:var(--muted);font-size:15px}
+  .namebtn{width:100%;min-height:56px;display:flex;align-items:center;gap:12px;background:none;border:0;border-top:1px solid var(--line);padding:0;font-size:17px;text-align:left}
+  .card>.namebtn:first-child{border-top:0}
+  .stickybar{position:sticky;bottom:calc(12px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:8px;padding-top:4px}
+</style>
+</head>
+<body>
+<main class="app" id="app"><div class="loading">Loading Your List…</div></main>
+<button class="status hide" id="status" data-act="retry">Offline · Changes Will Sync</button>
+
+<script>
+var GL = (function GL_FACTORY_() {
+
+  function copy(o) { return JSON.parse(JSON.stringify(o)); }
+
+  function titleCase(s) {
+    return String(s || '').trim().replace(/\s+/g, ' ').split(' ').map(function (w) {
+      if (!w) { return w; }
+      var i = 0;
+      while (i < w.length && !/[A-Za-z0-9]/.test(w.charAt(i))) { i++; }
+      return w.slice(0, i) + w.charAt(i).toUpperCase() + w.slice(i + 1);
+    }).join(' ');
+  }
+
+  function norm(s) { return String(s || '').trim().toLowerCase().replace(/\s+/g, ' '); }
+
+  // "Limes 6", "6 Limes", "Limes x6", "6x Limes" -> { name, qty }
+  function parseAdd(text) {
+    var t = String(text || '').trim().replace(/\s+/g, ' ');
+    var m, qty = 1;
+    if ((m = t.match(/^(\d{1,3})\s*[xX]?\s+(.+)$/))) { qty = parseInt(m[1], 10); t = m[2]; }
+    else if ((m = t.match(/^(.+?)\s+[xX]?\s*(\d{1,3})$/))) { qty = parseInt(m[2], 10); t = m[1]; }
+    if (!qty || qty < 1) { qty = 1; }
+    return { name: titleCase(t), qty: qty };
+  }
+
+  var GUESS = [
+    ['Frozen', ['frozen', 'ice cream', 'popsicle']],
+    ['Personal Care', ['shampoo', 'conditioner', 'toothpaste', 'toothbrush', 'deodorant', 'floss', 'razor', 'lotion', 'sunscreen', 'body soap', 'hand soap', 'q tips', 'tampon', 'vitamin']],
+    ['Household', ['cleaner', 'detergent', 'paper towel', 'toilet paper', 'trash', 'garbage', 'foil', 'plastic wrap', 'sponge', 'bags', 'batteries', 'bulb', 'dish soap', 'dryer', 'napkin', 'kleenex', 'tissue']],
+    ['Pets', ['cat ', 'dog ', 'litter', 'pet ']],
+    ['Spices', ['powder', 'cumin', 'paprika', 'oregano', 'cinnamon', 'nutmeg', 'cardamom', 'seasoning', 'spice', 'peppercorn', 'salt']],
+    ['Oils', ['oil', 'vinegar', 'ketchup', 'mustard', 'mayo', 'dressing', 'hot sauce', 'syrup', 'jam', 'jelly', 'honey']],
+    ['International', ['soy sauce', 'tamari', 'miso', 'nori', 'curry paste', 'fish sauce', 'sriracha', 'gochujang', 'rice paper', 'kimchi']],
+    ['Canned/Jarred', ['canned', 'can ', 'beans', 'broth', 'stock', 'tomato sauce', 'tomatoes (', 'salsa', 'pickle', 'olives']],
+    ['Grains/Pasta/Dried', ['rice', 'pasta', 'noodle', 'spaghetti', 'quinoa', 'oats', 'oatmeal', 'cereal', 'lentil', 'couscous', 'barley']],
+    ['Baking', ['flour', 'sugar', 'baking', 'yeast', 'vanilla', 'chocolate chips', 'cocoa']],
+    ['Snacks', ['chips', 'crackers', 'cookies', 'nuts', 'almonds', 'pretzels', 'popcorn', 'granola bar', 'candy', 'trail mix']],
+    ['Beverages', ['juice', 'soda', 'water', 'coffee', 'tea', 'kombucha', 'beer', 'wine', 'sparkling']],
+    ['Dairy', ['milk', 'cheese', 'yogurt', 'butter', 'cream', 'eggs', 'sour cream']],
+    ['Meat Alternatives', ['tofu', 'tempeh', 'seitan', 'vegan', 'plant based', 'beyond', 'impossible']],
+    ['Meat', ['chicken', 'beef', 'pork', 'turkey', 'sausage', 'bacon', 'ham', 'steak', 'fish', 'salmon', 'shrimp']],
+    ['Bakery', ['bread', 'bagel', 'bun', 'roll', 'muffin', 'croissant', 'pita', 'naan', 'tortilla']],
+    ['Produce', ['apple', 'banana', 'orange', 'lemon', 'lime', 'berr', 'grape', 'melon', 'pear', 'peach', 'plum', 'mango', 'pineapple', 'kiwi', 'avocado', 'lettuce', 'spinach', 'kale', 'arugula', 'cabbage', 'carrot', 'celery', 'onion', 'garlic', 'ginger', 'potato', 'tomato', 'pepper', 'cucumber', 'zucchini', 'squash', 'broccoli', 'cauliflower', 'mushroom', 'herb', 'basil', 'parsley', 'cilantro', 'mint', 'corn', 'beet', 'radish', 'leek', 'asparagus', 'sprout']]
+  ];
+
+  function guessSection(name, sections) {
+    var n = ' ' + norm(name) + ' ';
+    for (var i = 0; i < GUESS.length; i++) {
+      var sec = GUESS[i][0], words = GUESS[i][1];
+      if (sections.indexOf(sec) === -1) { continue; }
+      for (var j = 0; j < words.length; j++) {
+        if (n.indexOf(words[j]) !== -1) { return sec; }
+      }
+    }
+    return sections.indexOf('Other') !== -1 ? 'Other' : sections[sections.length - 1];
+  }
+
+  function findByName(st, name) {
+    var n = norm(name);
+    var ids = Object.keys(st.items);
+    for (var i = 0; i < ids.length; i++) { if (norm(st.items[ids[i]].name) === n) { return ids[i]; } }
+    return null;
+  }
+
+  // Also matches "Lime" when you type "Limes" (and the other way round).
+  function findLoose(st, name) {
+    var n = norm(name);
+    return findByName(st, n) ||
+      (/es$/.test(n) ? findByName(st, n.slice(0, -2)) : null) ||
+      (/s$/.test(n) ? findByName(st, n.slice(0, -1)) : null) ||
+      findByName(st, n + 's') || findByName(st, n + 'es');
+  }
+
+  function ingN(meal, id) {
+    for (var i = 0; i < meal.ing.length; i++) { if (meal.ing[i][0] === id) { return meal.ing[i][1]; } }
+    return 0;
+  }
+
+  // How many of each item are on the list right now.
+  function totals(st) {
+    var t = {};
+    Object.keys(st.manual).forEach(function (id) { t[id] = (t[id] || 0) + st.manual[id]; });
+    Object.keys(st.active).forEach(function (mid) {
+      var meal = st.meals[mid];
+      if (!meal) { return; }
+      Object.keys(st.active[mid]).forEach(function (id) { t[id] = (t[id] || 0) + ingN(meal, id); });
+    });
+    Object.keys(t).forEach(function (id) {
+      if (t[id] > 0 && st.adj[id]) { t[id] = Math.max(1, t[id] + st.adj[id]); }
+      if (!st.items[id] || t[id] <= 0) { delete t[id]; }
+    });
+    return t;
+  }
+
+  function maxPos(st, sec) {
+    var m = -1;
+    Object.keys(st.items).forEach(function (id) {
+      if (st.items[id].sec === sec && st.items[id].pos > m) { m = st.items[id].pos; }
+    });
+    return m;
+  }
+
+  function takeOff(st, id) {
+    delete st.manual[id];
+    delete st.adj[id];
+    delete st.checked[id];
+    Object.keys(st.active).forEach(function (mid) { delete st.active[mid][id]; });
+  }
+
+  function removeFromWeek(st, mealId) {
+    var chosen = st.active[mealId];
+    if (!chosen) { return; }
+    var before = totals(st);
+    delete st.active[mealId];
+    var after = totals(st);
+    Object.keys(chosen).forEach(function (id) {
+      if (st.checked[id] && !after[id] && before[id]) { st.manual[id] = before[id]; }
+    });
+    st.mealOrder = st.mealOrder.filter(function (m) { return m !== mealId; });
+  }
+
+  // Learn walking order: within each section, nudge items toward the order they were checked off.
+  function learn(st) {
+    var byUser = {};
+    Object.keys(st.checked).forEach(function (id) {
+      var c = st.checked[id];
+      if (!st.items[id]) { return; }
+      (byUser[c.by] = byUser[c.by] || []).push({ id: id, t: c.t || 0 });
+    });
+    Object.keys(byUser).forEach(function (u) {
+      var seq = byUser[u].sort(function (a, b) { return a.t - b.t; });
+      var bySec = {};
+      seq.forEach(function (x) { var s = st.items[x.id].sec; (bySec[s] = bySec[s] || []).push(x.id); });
+      Object.keys(bySec).forEach(function (s) {
+        var ids = bySec[s];
+        if (ids.length < 2) { return; }
+        var slots = ids.map(function (id) { return st.items[id].pos; }).sort(function (a, b) { return a - b; });
+        ids.forEach(function (id, k) {
+          var it = st.items[id];
+          it.pos = Math.round((it.pos * 0.35 + slots[k] * 0.65) * 1000) / 1000;
+        });
+        // Make sure the observed order now holds exactly.
+        for (var k = 1; k < ids.length; k++) {
+          var prev = st.items[ids[k - 1]], cur = st.items[ids[k]];
+          if (cur.pos <= prev.pos) { cur.pos = Math.round((prev.pos + 0.01) * 1000) / 1000; }
+        }
+      });
+    });
+  }
+
+  function apply(st, op) {
+    var id = op.id, t;
+    // Every change carries its own id, so a change that gets sent twice is only counted once.
+    if (op.oid) {
+      st.done = st.done || [];
+      if (st.done.indexOf(op.oid) !== -1) { return st; }
+      st.done.push(op.oid);
+      if (st.done.length > 300) { st.done = st.done.slice(-300); }
+    }
+    switch (op.type) {
+      case 'check':
+        if (!st.items[id]) { break; }
+        // "on" says exactly what the phone showed, so a change that arrives late can't flip it the wrong way.
+        var want = op.on === undefined ? !st.checked[id] : !!op.on;
+        if (!want) { delete st.checked[id]; } else if (!st.checked[id]) { st.checked[id] = { by: op.by, t: op.t || 0 }; }
+        break;
+      case 'add': {
+        var existing = st.items[id] ? id : findLoose(st, op.name);
+        if (!existing) {
+          if (!op.name) { break; }
+          var sec = st.sections.indexOf(op.sec) !== -1 ? op.sec : guessSection(op.name, st.sections);
+          st.items[id] = { name: op.name, sec: sec, pos: maxPos(st, sec) + 1 };
+          existing = id;
+        }
+        t = totals(st);
+        if (t[existing]) { st.manual[existing] = (st.manual[existing] || 0) + (op.qty || 1); }
+        else { delete st.adj[existing]; st.manual[existing] = op.qty || 1; }
+        delete st.checked[existing];
+        break;
+      }
+      case 'remove':
+        takeOff(st, id);
+        break;
+      case 'bump':
+        t = totals(st);
+        if (!t[id] || t[id] + op.d < 1) { break; }
+        st.adj[id] = (st.adj[id] || 0) + op.d;
+        if (!st.adj[id]) { delete st.adj[id]; }
+        break;
+      case 'clear':
+        learn(st);
+        st.counts = st.counts || {};
+        Object.keys(st.checked).forEach(function (cid) { if (st.items[cid]) { st.counts[cid] = (st.counts[cid] || 0) + 1; } });
+        Object.keys(st.checked).forEach(function (cid) { takeOff(st, cid); });
+        st.checked = {};
+        break;
+      case 'addMeal':
+        if (!st.meals[op.mealId]) { break; }
+        st.active[op.mealId] = {};
+        Object.keys(op.ticks || {}).forEach(function (iid) {
+          if (st.items[iid] && ingN(st.meals[op.mealId], iid)) { st.active[op.mealId][iid] = true; delete st.checked[iid]; }
+        });
+        st.mealOrder = st.mealOrder.filter(function (m) { return m !== op.mealId; }).concat([op.mealId]);
+        break;
+      case 'removeMeal':
+        removeFromWeek(st, op.mealId);
+        break;
+      case 'newMeal':
+        if (!op.name || findMealByName(st, op.name)) { break; }
+        st.meals[op.mealId] = { name: op.name, ing: [] };
+        break;
+      case 'saveMeal': {
+        var meal = st.meals[op.mealId];
+        if (!meal) { break; }
+        if (op.name) { meal.name = op.name; }
+        var ing = (op.ing || []).filter(function (p) { return st.items[p[0]] && p[1] > 0; });
+        var had = {};
+        meal.ing.forEach(function (p) { had[p[0]] = true; });
+        meal.ing = ing;
+        if (st.active[op.mealId]) {
+          var ticks = st.active[op.mealId];
+          Object.keys(ticks).forEach(function (iid) { if (!ingN(meal, iid)) { delete ticks[iid]; } });
+          ing.forEach(function (p) { if (!had[p[0]]) { ticks[p[0]] = true; delete st.checked[p[0]]; } });
+        }
+        break;
+      }
+      case 'deleteMeal':
+        removeFromWeek(st, op.mealId);
+        delete st.meals[op.mealId];
+        break;
+      case 'editItem':
+        if (!st.items[id]) { break; }
+        if (op.name && !(findByName(st, op.name) && findByName(st, op.name) !== id)) { st.items[id].name = op.name; }
+        if (op.sec && st.sections.indexOf(op.sec) !== -1 && op.sec !== st.items[id].sec) {
+          st.items[id].sec = op.sec;
+          st.items[id].pos = maxPos(st, op.sec) + 1;
+        }
+        break;
+      case 'deleteItem':
+        if (!st.items[id]) { break; }
+        takeOff(st, id);
+        Object.keys(st.meals).forEach(function (mid) {
+          st.meals[mid].ing = st.meals[mid].ing.filter(function (p) { return p[0] !== id; });
+        });
+        delete st.items[id];
+        if (st.counts) { delete st.counts[id]; }
+        break;
+      case 'setSections':
+        if (op.sections && op.sections.length === st.sections.length &&
+            op.sections.slice().sort().join('|') === st.sections.slice().sort().join('|')) {
+          st.sections = op.sections.slice();
+        }
+        break;
+      case 'setPrefs':
+        if (!op.name || !op.prefs) { break; }
+        st.prefs = st.prefs || {};
+        st.prefs[op.name] = st.prefs[op.name] || {};
+        Object.keys(op.prefs).forEach(function (k) { st.prefs[op.name][k] = op.prefs[k]; });
+        break;
+      case 'addUser':
+        if (op.name && !st.users.some(function (u) { return norm(u) === norm(op.name); })) { st.users.push(op.name); }
+        break;
+    }
+    return st;
+  }
+
+  function findMealByName(st, name) {
+    var n = norm(name);
+    var ids = Object.keys(st.meals);
+    for (var i = 0; i < ids.length; i++) { if (norm(st.meals[ids[i]].name) === n) { return ids[i]; } }
+    return null;
+  }
+
+  function applyAll(st, ops) {
+    var s = copy(st);
+    ops.forEach(function (op) { apply(s, op); });
+    return s;
+  }
+
+  function newState(sections, itemsBySection, meals) {
+    var st = { v: 1, sections: sections.slice(), items: {}, manual: {}, adj: {}, checked: {}, meals: {}, active: {}, mealOrder: [], users: [], counts: {} };
+    var n = 0;
+    sections.forEach(function (sec) {
+      (itemsBySection[sec] || []).slice().sort(function (a, b) { return a.localeCompare(b); }).forEach(function (name, k) {
+        n++;
+        st.items['i' + n] = { name: name, sec: sec, pos: k };
+      });
+    });
+    meals.forEach(function (name, k) { st.meals['m' + (k + 1)] = { name: name, ing: [] }; });
+    return st;
+  }
+
+  return {
+    copy: copy, titleCase: titleCase, norm: norm, parseAdd: parseAdd, guessSection: guessSection,
+    findByName: findByName, findLoose: findLoose, findMealByName: findMealByName, ingN: ingN, totals: totals,
+    apply: apply, applyAll: applyAll, newState: newState
+  };
+})();
+window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"0 0 16 16\" shape-rendering=\"crispEdges\" aria-hidden=\"true\"><rect x=\"13\" y=\"0\" width=\"1\" height=\"1\" fill=\"#A6EB8C\"/><rect x=\"11\" y=\"1\" width=\"1\" height=\"1\" fill=\"#A6EB8C\"/><rect x=\"13\" y=\"1\" width=\"1\" height=\"1\" fill=\"#5CC96B\"/><rect x=\"15\" y=\"1\" width=\"1\" height=\"1\" fill=\"#A6EB8C\"/><rect x=\"11\" y=\"2\" width=\"1\" height=\"1\" fill=\"#5CC96B\"/><rect x=\"12\" y=\"2\" width=\"1\" height=\"1\" fill=\"#A6EB8C\"/><rect x=\"13\" y=\"2\" width=\"2\" height=\"1\" fill=\"#5CC96B\"/><rect x=\"12\" y=\"3\" width=\"1\" height=\"1\" fill=\"#5CC96B\"/><rect x=\"13\" y=\"3\" width=\"1\" height=\"1\" fill=\"#2E8A45\"/><rect x=\"14\" y=\"3\" width=\"1\" height=\"1\" fill=\"#5CC96B\"/><rect x=\"9\" y=\"4\" width=\"3\" height=\"1\" fill=\"#7A3812\"/><rect x=\"12\" y=\"4\" width=\"1\" height=\"1\" fill=\"#2E8A45\"/><rect x=\"13\" y=\"4\" width=\"1\" height=\"1\" fill=\"#5CC96B\"/><rect x=\"8\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"9\" y=\"5\" width=\"1\" height=\"1\" fill=\"#FFC07A\"/><rect x=\"10\" y=\"5\" width=\"2\" height=\"1\" fill=\"#F28A2E\"/><rect x=\"12\" y=\"5\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"7\" y=\"6\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"8\" y=\"6\" width=\"1\" height=\"1\" fill=\"#FFC07A\"/><rect x=\"9\" y=\"6\" width=\"3\" height=\"1\" fill=\"#F28A2E\"/><rect x=\"12\" y=\"6\" width=\"1\" height=\"1\" fill=\"#C8601C\"/><rect x=\"13\" y=\"6\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"6\" y=\"7\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"7\" y=\"7\" width=\"1\" height=\"1\" fill=\"#FFC07A\"/><rect x=\"8\" y=\"7\" width=\"4\" height=\"1\" fill=\"#F28A2E\"/><rect x=\"12\" y=\"7\" width=\"1\" height=\"1\" fill=\"#C8601C\"/><rect x=\"13\" y=\"7\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"5\" y=\"8\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"6\" y=\"8\" width=\"1\" height=\"1\" fill=\"#FFC07A\"/><rect x=\"7\" y=\"8\" width=\"2\" height=\"1\" fill=\"#F28A2E\"/><rect x=\"9\" y=\"8\" width=\"1\" height=\"1\" fill=\"#C8601C\"/><rect x=\"10\" y=\"8\" width=\"1\" height=\"1\" fill=\"#F28A2E\"/><rect x=\"11\" y=\"8\" width=\"1\" height=\"1\" fill=\"#C8601C\"/><rect x=\"12\" y=\"8\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"5\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"6\" y=\"9\" width=\"1\" height=\"1\" fill=\"#FFC07A\"/><rect x=\"7\" y=\"9\" width=\"3\" height=\"1\" fill=\"#F28A2E\"/><rect x=\"10\" y=\"9\" width=\"1\" height=\"1\" fill=\"#C8601C\"/><rect x=\"11\" y=\"9\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"4\" y=\"10\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"5\" y=\"10\" width=\"1\" height=\"1\" fill=\"#FFC07A\"/><rect x=\"6\" y=\"10\" width=\"1\" height=\"1\" fill=\"#F28A2E\"/><rect x=\"7\" y=\"10\" width=\"1\" height=\"1\" fill=\"#C8601C\"/><rect x=\"8\" y=\"10\" width=\"1\" height=\"1\" fill=\"#F28A2E\"/><rect x=\"9\" y=\"10\" width=\"1\" height=\"1\" fill=\"#C8601C\"/><rect x=\"10\" y=\"10\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"4\" y=\"11\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"5\" y=\"11\" width=\"3\" height=\"1\" fill=\"#F28A2E\"/><rect x=\"8\" y=\"11\" width=\"1\" height=\"1\" fill=\"#C8601C\"/><rect x=\"9\" y=\"11\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"3\" y=\"12\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"4\" y=\"12\" width=\"2\" height=\"1\" fill=\"#F28A2E\"/><rect x=\"6\" y=\"12\" width=\"2\" height=\"1\" fill=\"#C8601C\"/><rect x=\"8\" y=\"12\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"3\" y=\"13\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"4\" y=\"13\" width=\"1\" height=\"1\" fill=\"#F28A2E\"/><rect x=\"5\" y=\"13\" width=\"1\" height=\"1\" fill=\"#C8601C\"/><rect x=\"6\" y=\"13\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"2\" y=\"14\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"3\" y=\"14\" width=\"1\" height=\"1\" fill=\"#C8601C\"/><rect x=\"4\" y=\"14\" width=\"1\" height=\"1\" fill=\"#7A3812\"/><rect x=\"2\" y=\"15\" width=\"2\" height=\"1\" fill=\"#7A3812\"/></svg>";
+</script>
+<script>
+/* Phone app bridge: connects this page (on GitHub Pages) to the Google Sheet's Apps Script,
+   using the setup code made by makeSetupCode(). Stands in for google.script.run. */
+(function () {
+  var CFG = 'gl_cfg';
+  function readCfg() { try { return JSON.parse(localStorage.getItem(CFG) || 'null'); } catch (e) { return null; } }
+  function decode(code) {
+    code = String(code || '').trim();
+    var m = code.match(/setup=([A-Za-z0-9_-]+)/);
+    if (m) { code = m[1]; }
+    try {
+      var b = code.replace(/-/g, '+').replace(/_/g, '/');
+      while (b.length % 4) { b += '='; }
+      var o = JSON.parse(atob(b));
+      if (o && o.u && o.k) { return o; }
+    } catch (e) {}
+    return null;
+  }
+
+  // A setup link (…/groceries/#setup=CODE) saves the connection, then hides the code from the address bar.
+  var hm = location.hash.match(/setup=([A-Za-z0-9_-]+)/);
+  if (hm) {
+    var fromLink = decode(hm[1]);
+    if (fromLink) { try { localStorage.setItem(CFG, JSON.stringify(fromLink)); } catch (e) {} }
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+  var cfg = readCfg();
+  // A setup link opened while the app is already showing: start over with it.
+  window.addEventListener('hashchange', function () { if (/setup=/.test(location.hash)) { location.reload(); } });
+
+  function call(c, fn, args) {
+    var ctl = window.AbortController ? new AbortController() : null;
+    var timer = setTimeout(function () { if (ctl) { ctl.abort(); } }, 25000);
+    return fetch(c.u, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify({ key: c.k, fn: fn, args: args }),
+      redirect: 'follow',
+      cache: 'no-store',
+      signal: ctl ? ctl.signal : undefined
+    }).then(function (r) {
+      clearTimeout(timer);
+      if (!r.ok) { throw new Error('Google Answered ' + r.status); }
+      return r.json();
+    }, function (err) {
+      clearTimeout(timer);
+      throw new Error(err && err.name === 'AbortError' ? 'Timed Out Waiting For Google' : 'Network Error (' + ((err && err.message) || 'Failed') + ')');
+    }).then(function (j) {
+      if (!j || !j.ok) { throw new Error((j && j.error) || 'Server Error'); }
+      return j.data;
+    });
+  }
+
+  window.BOOT = '';
+  window.URL_ME = '';
+  window.google = { script: {
+    history: { replace: function () {} },
+    get run() {
+      var ok = function () {}, fail = function () {};
+      var r = {
+        withSuccessHandler: function (f) { ok = f; return r; },
+        withFailureHandler: function (f) { fail = f; return r; },
+        getState: function (v) { call(cfg, 'getState', [v]).then(ok, fail); },
+        applyOps: function (o) { call(cfg, 'applyOps', [o]).then(ok, fail); }
+      };
+      return r;
+    }
+  } };
+
+  if (cfg) { return; }
+
+  // Not connected yet: show the Connect screen instead of the list.
+  window.HOLD_APP = true;
+  var app = document.getElementById('app');
+  app.innerHTML =
+    '<div class="top"><div class="brand"><div style="display:flex;flex-direction:column;gap:4px"><h1>Groceries</h1>' +
+    '<div class="sub">Connect This Phone To Your List</div></div>' + (window.CARROT_SVG || '') + '</div></div>' +
+    '<div class="card" style="padding:16px 14px;display:flex;flex-direction:column;gap:12px">' +
+    '<div style="font-size:15px;line-height:1.45;color:var(--muted)">Open The Setup Link On This Phone, Or Paste The Setup Code Here.</div>' +
+    '<label class="field"><span class="sr">Setup Code</span><input id="setupCode" type="text" placeholder="Setup Code" autocomplete="off" autocapitalize="off" spellcheck="false"></label>' +
+    '<button class="big" id="connectBtn" type="button">Connect</button>' +
+    '<div id="connectMsg" class="sub" style="min-height:20px"></div></div>';
+  var btn = document.getElementById('connectBtn'), msg = document.getElementById('connectMsg');
+  btn.addEventListener('click', function () {
+    var c = decode(document.getElementById('setupCode').value);
+    if (!c) { msg.textContent = 'That Code Doesn\'t Look Right. Copy The Whole Thing.'; return; }
+    btn.disabled = true; msg.textContent = 'Connecting…';
+    call(c, 'getState', [0]).then(function () {
+      localStorage.setItem(CFG, JSON.stringify(c));
+      location.reload();
+    }, function (err) {
+      btn.disabled = false;
+      msg.textContent = 'Couldn\'t Connect: ' + ((err && err.message) || 'Unknown Problem');
+    });
+  });
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+  if (window.HOLD_APP) { return; }  // the phone app shows its Connect screen first
+
+  /* ---------- icons ---------- */
+  var I = {
+    down: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="stroke:var(--muted)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>',
+    right: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="stroke:var(--muted)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>',
+    back: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" style="stroke:var(--text)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>',
+    plusG: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="stroke:var(--accent)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+    plusW: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="stroke:var(--text)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+    incG: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="stroke:var(--accent)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>',
+    dec: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" style="stroke:var(--text)" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M5 12h14"/></svg>',
+    check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="stroke:var(--ink)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    checkG: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="stroke:var(--accent)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+    list: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="stroke:var(--text)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="3"/></svg>',
+    gear: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" style="stroke:var(--muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>',
+    search: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="stroke:var(--muted)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg>',
+    close: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" style="stroke:var(--muted)" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+    up: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="stroke:var(--text)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>',
+    dn: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" style="stroke:var(--text)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>'
+  };
+  var CARROT = '<svg class="carrot" width="48" height="48" viewBox="0 0 16 16" shape-rendering="crispEdges" aria-hidden="true"><rect x="13" y="0" width="1" height="1" fill="#A6EB8C"/><rect x="11" y="1" width="1" height="1" fill="#A6EB8C"/><rect x="13" y="1" width="1" height="1" fill="#5CC96B"/><rect x="15" y="1" width="1" height="1" fill="#A6EB8C"/><rect x="11" y="2" width="1" height="1" fill="#5CC96B"/><rect x="12" y="2" width="1" height="1" fill="#A6EB8C"/><rect x="13" y="2" width="2" height="1" fill="#5CC96B"/><rect x="12" y="3" width="1" height="1" fill="#5CC96B"/><rect x="13" y="3" width="1" height="1" fill="#2E8A45"/><rect x="14" y="3" width="1" height="1" fill="#5CC96B"/><rect x="9" y="4" width="3" height="1" fill="#7A3812"/><rect x="12" y="4" width="1" height="1" fill="#2E8A45"/><rect x="13" y="4" width="1" height="1" fill="#5CC96B"/><rect x="8" y="5" width="1" height="1" fill="#7A3812"/><rect x="9" y="5" width="1" height="1" fill="#FFC07A"/><rect x="10" y="5" width="2" height="1" fill="#F28A2E"/><rect x="12" y="5" width="1" height="1" fill="#7A3812"/><rect x="7" y="6" width="1" height="1" fill="#7A3812"/><rect x="8" y="6" width="1" height="1" fill="#FFC07A"/><rect x="9" y="6" width="3" height="1" fill="#F28A2E"/><rect x="12" y="6" width="1" height="1" fill="#C8601C"/><rect x="13" y="6" width="1" height="1" fill="#7A3812"/><rect x="6" y="7" width="1" height="1" fill="#7A3812"/><rect x="7" y="7" width="1" height="1" fill="#FFC07A"/><rect x="8" y="7" width="4" height="1" fill="#F28A2E"/><rect x="12" y="7" width="1" height="1" fill="#C8601C"/><rect x="13" y="7" width="1" height="1" fill="#7A3812"/><rect x="5" y="8" width="1" height="1" fill="#7A3812"/><rect x="6" y="8" width="1" height="1" fill="#FFC07A"/><rect x="7" y="8" width="2" height="1" fill="#F28A2E"/><rect x="9" y="8" width="1" height="1" fill="#C8601C"/><rect x="10" y="8" width="1" height="1" fill="#F28A2E"/><rect x="11" y="8" width="1" height="1" fill="#C8601C"/><rect x="12" y="8" width="1" height="1" fill="#7A3812"/><rect x="5" y="9" width="1" height="1" fill="#7A3812"/><rect x="6" y="9" width="1" height="1" fill="#FFC07A"/><rect x="7" y="9" width="3" height="1" fill="#F28A2E"/><rect x="10" y="9" width="1" height="1" fill="#C8601C"/><rect x="11" y="9" width="1" height="1" fill="#7A3812"/><rect x="4" y="10" width="1" height="1" fill="#7A3812"/><rect x="5" y="10" width="1" height="1" fill="#FFC07A"/><rect x="6" y="10" width="1" height="1" fill="#F28A2E"/><rect x="7" y="10" width="1" height="1" fill="#C8601C"/><rect x="8" y="10" width="1" height="1" fill="#F28A2E"/><rect x="9" y="10" width="1" height="1" fill="#C8601C"/><rect x="10" y="10" width="1" height="1" fill="#7A3812"/><rect x="4" y="11" width="1" height="1" fill="#7A3812"/><rect x="5" y="11" width="3" height="1" fill="#F28A2E"/><rect x="8" y="11" width="1" height="1" fill="#C8601C"/><rect x="9" y="11" width="1" height="1" fill="#7A3812"/><rect x="3" y="12" width="1" height="1" fill="#7A3812"/><rect x="4" y="12" width="2" height="1" fill="#F28A2E"/><rect x="6" y="12" width="2" height="1" fill="#C8601C"/><rect x="8" y="12" width="1" height="1" fill="#7A3812"/><rect x="3" y="13" width="1" height="1" fill="#7A3812"/><rect x="4" y="13" width="1" height="1" fill="#F28A2E"/><rect x="5" y="13" width="1" height="1" fill="#C8601C"/><rect x="6" y="13" width="1" height="1" fill="#7A3812"/><rect x="2" y="14" width="1" height="1" fill="#7A3812"/><rect x="3" y="14" width="1" height="1" fill="#C8601C"/><rect x="4" y="14" width="1" height="1" fill="#7A3812"/><rect x="2" y="15" width="2" height="1" fill="#7A3812"/></svg>';
+  var COLORS = [['#1E2A3A', '#8CC4FF'], ['#3A2A1A', '#F2B06A'], ['#2E2340', '#C9A8FF'], ['#1E3A33', '#7FE0C6']];
+
+  /* ---------- colors (each phone keeps its own) ---------- */
+  var THEMES = [
+    { id: 'midnight', name: 'Midnight', bg: '#0E1013', accent: '#5EDB9A' },
+    { id: 'ocean', name: 'Ocean', bg: '#0B1622', accent: '#4FB3FF' },
+    { id: 'plum', name: 'Plum', bg: '#17111C', accent: '#C792EA' },
+    { id: 'ember', name: 'Ember', bg: '#1A1210', accent: '#FF9F5A' },
+    { id: 'rose', name: 'Rose', bg: '#1C1216', accent: '#FF7AA8' },
+    { id: 'slate', name: 'Slate', bg: '#1B2027', accent: '#E8C468' },
+    { id: 'paper', name: 'Paper', bg: '#F4F1EA', accent: '#2E8B57' },
+    { id: 'sky', name: 'Sky', bg: '#EEF3F8', accent: '#2F6FDE' }
+  ];
+  function rgb(h) { h = h.replace('#', ''); return [0, 2, 4].map(function (i) { return parseInt(h.substr(i, 2), 16); }); }
+  function hex(c) { return '#' + c.map(function (v) { v = Math.max(0, Math.min(255, Math.round(v))); return (v < 16 ? '0' : '') + v.toString(16); }).join('').toUpperCase(); }
+  function mix(a, b, t) { var A = rgb(a), B = rgb(b); return hex(A.map(function (v, i) { return v + (B[i] - v) * t; })); }
+  function lum(h) { return rgb(h).map(function (v) { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }).reduce(function (s, v, i) { return s + v * [0.2126, 0.7152, 0.0722][i]; }, 0); }
+  function contrast(a, b) { var x = lum(a), y = lum(b); return (Math.max(x, y) + 0.05) / (Math.min(x, y) + 0.05); }
+  // Move color c toward target until it reaches the wanted contrast against bg.
+  function reach(c, target, bg, want) { for (var t = 0; t <= 1.001; t += 0.05) { var m = mix(c, target, t); if (contrast(m, bg) >= want) { return m; } } return target; }
+
+  // Text color to put on top of the highlight (Save buttons, switches). Picks whichever reads best.
+  function inkFor(acc) {
+    var best = '#0E1013';
+    ['#FFFFFF', '#000000'].forEach(function (c) { if (contrast(acc, c) > contrast(acc, best) + 0.3) { best = c; } });
+    return best;
+  }
+  function themeVars(bg, accent, textMode) {
+    var light = '#EDEFF3', darkT = '#16181C';
+    var text = textMode === 'light' ? light : textMode === 'dark' ? darkT : (contrast(bg, light) >= contrast(bg, darkT) ? light : darkT);
+    var dark = text === light;
+    var card = dark ? mix(bg, text, 0.055) : mix(bg, '#FFFFFF', 0.75);
+    var acc = reach(accent, text, card, 3);
+    var danger = dark ? '#FF9A8A' : '#C2412D';
+    return {
+      bg: bg, text: text, card: card,
+      line: mix(card, text, 0.07), edge: mix(card, text, 0.13), seg: mix(card, text, 0.13), chip: mix(card, text, 0.09),
+      muted: reach(mix(text, card, 0.38), text, card, 4.6), dim: reach(mix(text, card, 0.42), text, card, 4.5),
+      ring: reach(mix(text, card, 0.6), text, card, 3), faint: mix(text, card, 0.72), qn: reach(mix(text, card, 0.62), text, card, 2.6),
+      swoff: mix(card, text, 0.22), knob: dark ? '#C9CED6' : '#FFFFFF',
+      cart: dark ? mix(bg, text, 0.025) : mix(bg, '#FFFFFF', 0.4), cartline: mix(card, text, 0.06),
+      accent: acc, ink: inkFor(acc),
+      pill: mix(card, acc, dark ? 0.16 : 0.12), warn: reach(dark ? '#F2B06A' : '#B05E0A', text, card, 4.5),
+      danger: danger, dangeredge: mix(card, danger, 0.35), dangerfill: mix(card, danger, 0.2), dangertext: dark ? '#FFD0C8' : '#7A1E10',
+      isDark: dark
+    };
+  }
+  var themeDark = true;
+  function applyTheme(t) {
+    t = t || {};
+    var base = THEMES.filter(function (x) { return x.id === t.id; })[0] || THEMES[0];
+    var bg = t.id === 'custom' ? (t.bg || base.bg) : base.bg;
+    var accent = t.id === 'custom' ? (t.accent || base.accent) : base.accent;
+    var v = themeVars(bg, accent, t.id === 'custom' ? t.text : 'auto');
+    themeDark = v.isDark;
+    var root = document.documentElement.style;
+    Object.keys(v).forEach(function (k) { if (k !== 'isDark') { root.setProperty('--' + k, v[k]); } });
+    var meta = document.querySelector('meta[name=theme-color]');
+    if (meta) { meta.setAttribute('content', bg); }
+    document.documentElement.style.colorScheme = themeDark ? 'dark' : 'light';
+  }
+
+  /* ---------- storage on this phone ---------- */
+  function lsGet(k, d) { try { var v = localStorage.getItem('gl_' + k); return v === null ? d : JSON.parse(v); } catch (e) { return d; } }
+  function lsSet(k, v) { try { localStorage.setItem('gl_' + k, JSON.stringify(v)); } catch (e) {} }
+
+  var prefs = { mode: lsGet('mode', 'store'), headings: lsGet('headings', true), mealsOpen: lsGet('mealsOpen', true), allSort: lsGet('allSort', 'most'), theme: lsGet('theme', { id: 'midnight' }) };
+  applyTheme(prefs.theme);
+  var me = URL_ME || lsGet('me', '');
+  if (URL_ME) { lsSet('me', URL_ME); }
+
+  // Put the name in the page address, so a Home Screen icon saved from here always knows who it is.
+  function setUrlName(name) {
+    try { google.script.history.replace(null, name ? { me: name } : {}); } catch (e) {}
+  }
+
+  // Each person's settings are also saved in the shared list, because iPhones may not keep them on the phone.
+  function savePref(k, v) {
+    prefs[k] = v;
+    lsSet(k, v);
+    if (me && server) { var p = {}; p[k] = v; send({ type: 'setPrefs', name: me, prefs: p }); }
+  }
+  function loadPrefs() {
+    if (!me || !st) { return; }
+    var saved = st.prefs && st.prefs[me];
+    if (saved) {
+      ['mode', 'headings', 'mealsOpen', 'allSort', 'theme'].forEach(function (k) {
+        if (saved[k] !== undefined) { prefs[k] = saved[k]; lsSet(k, saved[k]); }
+      });
+      applyTheme(prefs.theme);
+    } else {
+      send({ type: 'setPrefs', name: me, prefs: { mode: prefs.mode, headings: prefs.headings, mealsOpen: prefs.mealsOpen, allSort: prefs.allSort, theme: prefs.theme } });
+    }
+  }
+
+  /* ---------- data ---------- */
+  var server = null, pending = [], inflight = false, st = null, T = {};
+  var ui = { screen: 'main', hot: null, rmArmed: null, addOpen: false, addText: '', search: '', allEdit: false, itemEdit: null,
+             mealSearch: '', addMealId: null, ticks: {}, viewMealId: null, ingMealId: null, ingSel: [], ingName: '',
+             ingSearch: '', ingBack: 'main', armed: null };
+  var built = null;
+
+  function uid(p) { return p + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function $(id) { return document.getElementById(id); }
+  function byName(a, b) { return a.name.localeCompare(b.name); }
+
+  function recompute() {
+    st = GL.applyAll(server, pending);
+    T = GL.totals(st);
+  }
+
+  function savePending() { lsSet('pending', pending); }
+  function remember(json) { lsSet('lastState', json); }
+
+  // Google's servers occasionally hiccup (e.g. DEADLINE_EXCEEDED). Retry quietly; only show a note if it keeps happening.
+  var fails = 0;
+  function logError(kind, msg) {
+    var log = lsGet('errlog', []) || [];
+    log.unshift({ t: Date.now(), kind: kind, msg: msg.slice(0, 200), online: navigator.onLine, hidden: document.hidden });
+    lsSet('errlog', log.slice(0, 15));
+  }
+  function failed(err, saving) {
+    var msg = String((err && err.message) || err || '');
+    logError(saving ? 'Save' : 'Check', msg || '(No Message)');
+    // Requests made while the app is in the background often get cut off by the phone. Don't count those.
+    if (document.hidden) { return; }
+    fails++;
+    if (fails < 3) { return; }
+    if (!navigator.onLine) { setStatus('Offline · Changes Will Sync'); return; }
+    var short = msg ? msg.replace(/^.*Error code /i, 'Error ').replace(/^(ScriptError|NetworkError|Error):\s*/i, '').slice(0, 50) : 'No Response From Google';
+    setStatus((pending.length ? 'Not Saved Yet · ' : 'Sync Problem · ') + short + ' · Tap To Retry');
+  }
+  function ok() { fails = 0; setStatus(''); }
+
+  function setStatus(text) {
+    var el = $('status');
+    if (!text) { el.classList.add('hide'); return; }
+    el.textContent = text;
+    el.classList.remove('hide');
+  }
+
+  function send(op) {
+    op.oid = uid('o');
+    pending.push(op);
+    savePending();
+    recompute();
+    render();
+    flush();
+  }
+
+  function flush() {
+    if (inflight || !pending.length) { return; }
+    inflight = true;
+    var batch = pending.slice();
+    google.script.run
+      .withSuccessHandler(function (json) {
+        inflight = false;
+        server = JSON.parse(json);
+        remember(json);
+        pending.splice(0, batch.length);
+        savePending();
+        ok();
+        recompute();
+        render(true);
+        flush();
+      })
+      .withFailureHandler(function (err) {
+        inflight = false;
+        failed(err, true);
+        setTimeout(flush, fails < 3 ? 1500 : 4000);
+      })
+      .applyOps(JSON.stringify(batch));
+  }
+
+  // Only one background check at a time. Google can take several seconds to answer,
+  // and piling up checks makes Google slower and causes errors.
+  var polling = false, pollStarted = 0;
+  function poll() {
+    if (!server || inflight || pending.length || document.hidden) { return; }
+    if (polling && Date.now() - pollStarted < 30000) { return; }
+    polling = true; pollStarted = Date.now();
+    google.script.run
+      .withSuccessHandler(function (json) {
+        polling = false;
+        if (!pending.length) { ok(); }
+        if (!json || inflight || pending.length) { return; }
+        var fresh = JSON.parse(json);
+        if (fresh.v < server.v) { return; }
+        server = fresh;
+        remember(json);
+        recompute();
+        render(true);
+      })
+      .withFailureHandler(function (err) { polling = false; failed(err, false); })
+      .getState(server.v);
+  }
+
+  /* ---------- helpers ---------- */
+  function userColor(name) {
+    var i = st.users.indexOf(name);
+    if (i < 0) { i = 0; }
+    var c = COLORS[i % COLORS.length];
+    return themeDark ? c : [mix(c[1], '#FFFFFF', 0.72), mix(c[1], '#000000', 0.55)];
+  }
+  function avatar(name, small) {
+    var c = userColor(name);
+    return '<span class="av' + (small ? ' sm' : '') + '" style="background:' + c[0] + ';color:' + c[1] + '" title="' + esc(name) + '">' + esc((name || '?').charAt(0).toUpperCase()) + '</span>';
+  }
+  function itemsOnList() {
+    return Object.keys(T).map(function (id) { var it = st.items[id]; return { id: id, name: it.name, sec: it.sec, pos: it.pos, n: T[id] }; });
+  }
+  function storeSort(list) {
+    return list.sort(function (a, b) {
+      var sa = st.sections.indexOf(a.sec), sb = st.sections.indexOf(b.sec);
+      return sa - sb || a.pos - b.pos || a.name.localeCompare(b.name);
+    });
+  }
+  function armed(key) { return ui.armed === key; }
+  function arm(key) {
+    ui.armed = key;
+    render();
+    setTimeout(function () { if (ui.armed === key) { ui.armed = null; render(); } }, 3000);
+  }
+
+  /* ---------- screens ---------- */
+  var animating = false;
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  // dir -1: the current screen slides off to the left and the new one comes in from the right. dir 1: the reverse.
+  function slide(dir, swap) {
+    var app = $('app');
+    if (!dir || reduceMotion || animating) { swap(); window.scrollTo(0, 0); return; }
+    animating = true;
+    app.style.transition = 'transform 160ms cubic-bezier(.4,0,1,1), opacity 160ms linear';
+    app.style.transform = 'translateX(' + (dir * 100) + '%)';
+    app.style.opacity = '0.2';
+    setTimeout(function () {
+      swap();
+      window.scrollTo(0, 0);
+      app.style.transition = 'none';
+      app.style.transform = 'translateX(' + (-dir * 35) + '%)';
+      app.style.opacity = '0';
+      void app.offsetWidth;
+      app.style.transition = 'transform 230ms cubic-bezier(0,0,.2,1), opacity 230ms linear';
+      app.style.transform = 'translateX(0)';
+      app.style.opacity = '1';
+      setTimeout(function () { app.style.transition = ''; app.style.transform = ''; app.style.opacity = ''; animating = false; }, 240);
+    }, 160);
+  }
+
+  function go(screen, dir) {
+    slide(dir, function () {
+      ui.screen = screen;
+      ui.armed = null;
+      if (screen !== 'main') { ui.addOpen = false; }
+      render();
+    });
+  }
+
+  function shell(screen) {
+    if (screen === 'name') {
+      return '<div class="top"><div><h1>Who\'s Using This Phone?</h1><div class="sub">Pick Your Name So Your Checkmarks Show Up</div></div></div>' +
+        '<div class="card" id="nameList"></div>' +
+        '<form class="addrow" id="nameForm"><label class="field"><span class="sr">Your Name</span><input id="nameInput" type="text" placeholder="Your Name" autocomplete="off"></label>' +
+        '<button class="sq" type="submit" aria-label="Save Name">' + I.plusG + '</button></form>';
+    }
+    if (screen === 'main') {
+      return '<div class="top"><div class="brand"><div style="display:flex;flex-direction:column;gap:4px"><h1>Groceries</h1><div class="sub" id="counts"></div></div>' + CARROT + '</div>' +
+        '<div style="display:flex;align-items:center;gap:4px"><div class="people" id="people"></div>' +
+        '<button class="iconbtn" data-act="settings" aria-label="Settings">' + I.gear + '</button></div></div>' +
+        '<section class="card"><div class="mealhead"><button class="mealtoggle" data-act="meals" id="mealToggle"><span id="mealChev"></span><b>This Week\'s Meals</b><span class="sub" id="mealCount"></span></button>' +
+        '<button class="link" data-act="picker">Add Meal</button></div><div class="chips" id="mealChips"></div></section>' +
+        '<div class="ctrl" id="ctrl"><div class="seg sm" id="seg"></div>' +
+        '<form class="addfield" id="addForm" autocomplete="off"><label class="field">' + I.plusG + '<span class="sr">Add An Item</span>' +
+        '<input id="addInput" type="text" placeholder="Add An Item" enterkeyhint="done" autocapitalize="words">' +
+        '<button class="xbtn" type="button" data-act="addClose" aria-label="Close Add">' + I.close + '</button></label></form>' +
+        '<div class="ctrlbtns"><button class="sq sm" type="button" data-act="addOpen" id="addOpenBtn" aria-label="Add An Item">' + I.plusG + '</button>' +
+        '<button class="sq sm" type="button" data-act="all" aria-label="All Items">' + I.list + '</button></div>' +
+        '<div class="card suggest hide" id="suggest"></div></div>' +
+        '<div id="list"></div><div id="cart"></div>';
+    }
+    if (screen === 'all') {
+      return '<div class="head2"><button class="iconbtn" data-act="home" aria-label="Back To List">' + I.back + '</button>' +
+        '<div class="grow"><h1>All Items</h1><div class="sub" id="allSub"></div></div><button class="link" data-act="allEdit" id="allEditBtn"></button></div>' +
+        '<label class="field">' + I.search + '<span class="sr">Search Items</span><input id="search" type="text" placeholder="Search Items" autocomplete="off" autocapitalize="words"></label>' +
+        '<div class="seg three" id="allSeg"></div><div id="allList"></div>';
+    }
+    if (screen === 'picker') {
+      return '<div class="head2"><button class="iconbtn" data-act="home" aria-label="Back To List">' + I.back + '</button><div class="grow"><h1>Add Meal</h1></div></div>' +
+        '<label class="field">' + I.search + '<span class="sr">Search Or Add A Meal</span><input id="mealSearch" type="text" placeholder="Search Or Add A Meal" autocomplete="off" autocapitalize="words"></label>' +
+        '<div class="card pad" id="savedMeals"></div>';
+    }
+    if (screen === 'addMeal') {
+      return '<div class="head2"><button class="iconbtn" data-act="picker" aria-label="Back To Meals">' + I.back + '</button>' +
+        '<div class="grow"><h1 id="addTitle"></h1><div class="sub">Untick Anything You Already Have</div></div></div>' +
+        '<div class="card" id="addRows"></div><div class="stickybar"><button class="big" data-act="confirmAdd" id="addBtn"></button>' +
+        '<button class="link" data-act="editIng" data-from="addMeal">Edit Ingredients</button></div>';
+    }
+    if (screen === 'meal') {
+      return '<div class="head2"><button class="iconbtn" data-act="home" aria-label="Back To List">' + I.back + '</button>' +
+        '<div class="grow"><h1 id="viewTitle"></h1><div class="sub">This Week\'s Meal</div></div></div>' +
+        '<div class="card" id="viewRows"></div><div class="two"><button class="ghost" data-act="editIng" data-from="meal">Edit Ingredients</button>' +
+        '<button class="ghost danger" data-act="removeMeal" id="removeMealBtn"></button></div>';
+    }
+    if (screen === 'ing') {
+      return '<div class="head2"><button class="iconbtn" data-act="ingBack" aria-label="Back">' + I.back + '</button><div class="grow"><h1>Edit Meal</h1></div></div>' +
+        '<div class="addrow"><label class="field"><span class="sr">Meal Name</span><input id="ingName" type="text" placeholder="Meal Name" autocomplete="off" autocapitalize="words"></label>' +
+        '<button class="savebtn" data-act="saveIng">Save</button></div>' +
+        '<div class="card pad" id="ingChosen"></div>' +
+        '<label class="field">' + I.search + '<span class="sr">Find Ingredients</span><input id="ingSearch" type="text" placeholder="Find Ingredients" autocomplete="off" autocapitalize="words"></label>' +
+        '<div class="card pad" id="ingAll"></div>' +
+        '<button class="ghost danger" data-act="deleteMeal" id="deleteMealBtn"></button>';
+    }
+    if (screen === 'settings') {
+      return '<div class="head2"><button class="iconbtn" data-act="home" aria-label="Back To List">' + I.back + '</button><div class="grow"><h1>Settings</h1></div></div>' +
+        '<div class="card"><button class="namebtn" data-act="changeName"><span style="flex:1">This Phone Belongs To <b id="meName"></b></span><span class="tag go">Change</span></button></div>' +
+        '<div class="card" id="secToggle"></div>' +
+        '<div class="sechead" style="padding:4px 4px 0"><h3>Colors</h3></div><div class="sub" style="margin-top:-12px;padding:0 4px">Only Changes This Phone</div>' +
+        '<div class="card" id="themeCard"></div>' +
+        '<div class="sechead" style="padding:4px 4px 0"><h3>Sync Details</h3></div><div class="card" id="syncLog"></div>' +
+        '<div class="sechead" style="padding:4px 4px 0"><h3>Store Order</h3></div><div class="sub" style="margin-top:-12px;padding:0 4px">Move Sections Into The Order You Walk The Store. Items Inside Each Section Learn Their Order As You Shop.</div>' +
+        '<div class="card" id="secList"></div>';
+    }
+    return '';
+  }
+
+  function render(soft) {
+    if (!st) { return; }
+    var screen = me ? ui.screen : 'name';
+    if (soft && document.activeElement && document.activeElement.closest && document.activeElement.closest('.editor')) { return; }
+    if (built !== screen) {
+      $('app').innerHTML = shell(screen);
+      built = screen;
+      bindInputs(screen);
+    }
+    ({ name: rName, main: rMain, all: rAll, picker: rPicker, addMeal: rAddMeal, meal: rMeal, ing: rIng, settings: rSettings }[screen] || function () {})();
+  }
+
+  function bindInputs(screen) {
+    if (screen === 'name') {
+      $('nameForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        var n = GL.titleCase($('nameInput').value);
+        if (n) { chooseName(n); }
+      });
+    }
+    if (screen === 'main') {
+      var inp = $('addInput');
+      inp.value = ui.addText;
+      inp.addEventListener('input', function () { ui.addText = inp.value; rSuggest(); });
+      // Tapping away from an empty add field tucks it back in.
+      inp.addEventListener('blur', function () {
+        setTimeout(function () {
+          if (ui.addOpen && !inp.value && document.activeElement !== inp) { ui.addOpen = false; render(); }
+        }, 200);
+      });
+      $('addForm').addEventListener('submit', function (e) {
+        e.preventDefault();
+        addTyped(inp.value);
+        inp.value = ''; ui.addText = '';
+        rSuggest();
+      });
+    }
+    if (screen === 'all') {
+      var s = $('search');
+      s.value = ui.search;
+      s.addEventListener('input', function () { ui.search = s.value; rAll(); });
+    }
+    if (screen === 'picker') {
+      var m = $('mealSearch');
+      m.value = ui.mealSearch;
+      m.addEventListener('input', function () { ui.mealSearch = m.value; rPicker(); });
+      m.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); var b = document.querySelector('[data-act="newMeal"]'); if (b) { b.click(); } }
+      });
+    }
+    if (screen === 'ing') {
+      var n = $('ingName'), q = $('ingSearch');
+      n.value = ui.ingName; q.value = ui.ingSearch;
+      n.addEventListener('input', function () { ui.ingName = n.value; });
+      q.addEventListener('input', function () { ui.ingSearch = q.value; rIngAll(); });
+    }
+  }
+
+  /* --- name --- */
+  function rName() {
+    $('nameList').innerHTML = st.users.length ? st.users.map(function (u) {
+      return '<button class="namebtn" data-act="pickName" data-name="' + esc(u) + '">' + avatar(u) + '<span>' + esc(u) + '</span></button>';
+    }).join('') : '<div class="empty">No One Has Picked A Name Yet. Type Yours Below.</div>';
+  }
+  function chooseName(n) {
+    me = n; lsSet('me', n);
+    setUrlName(n);
+    loadPrefs();
+    if (st.users.indexOf(n) === -1) { send({ type: 'addUser', name: n }); }
+    built = null; ui.screen = 'main'; render();
+  }
+
+  /* --- main --- */
+  function rowHtml(x, az) {
+    var right = ui.rmArmed === x.id
+      ? '<button class="rmpill" data-act="rmItem" data-id="' + x.id + '" aria-label="Tap Again To Remove ' + esc(x.name) + '">Remove</button>'
+      : '<div class="qty' + (ui.hot === x.id ? ' hot' : '') + '">' +
+      '<button class="qb" data-act="dec" data-id="' + x.id + '" aria-label="' + (x.n <= 1 ? 'Remove ' : 'One Less ') + esc(x.name) + '">' + I.dec + '</button>' +
+      '<span class="qn' + (x.n > 1 ? ' many' : '') + '">' + x.n + '</span>' +
+      '<button class="qb up" data-act="inc" data-id="' + x.id + '" aria-label="One More ' + esc(x.name) + '">' + I.incG + '</button></div>';
+    return '<div class="row"><button class="rowmain" data-act="check" data-id="' + x.id + '"><span class="circle" aria-hidden="true"></span>' +
+      '<span class="nm"><span>' + esc(x.name) + '</span>' + (az ? '<small>' + esc(x.sec) + '</small>' : '') + '</span></button>' + right + '</div>';
+  }
+
+  function rMain() {
+    var all = itemsOnList();
+    var toGet = all.filter(function (x) { return !st.checked[x.id]; });
+    var inCart = all.filter(function (x) { return st.checked[x.id]; }).sort(function (a, b) { return st.checked[a.id].t - st.checked[b.id].t; });
+
+    $('counts').textContent = toGet.length + ' To Get · ' + inCart.length + ' In Cart';
+    $('people').innerHTML = st.users.map(function (u) { return avatar(u); }).join('');
+
+    var meals = st.mealOrder.filter(function (m) { return st.active[m] && st.meals[m]; });
+    $('mealCount').textContent = meals.length;
+    $('mealChev').innerHTML = prefs.mealsOpen ? I.down : I.right;
+    $('mealToggle').setAttribute('aria-expanded', prefs.mealsOpen ? 'true' : 'false');
+    var chips = $('mealChips');
+    chips.classList.toggle('hide', !prefs.mealsOpen);
+    chips.innerHTML = meals.length ? meals.map(function (m) {
+      return '<button class="chip" data-act="openMeal" data-id="' + m + '">' + esc(st.meals[m].name) + '</button>';
+    }).join('') : '<div class="empty">No Meals Planned Yet</div>';
+
+    rSuggest();
+
+    $('seg').innerHTML = '<button data-act="mode" data-mode="store" class="' + (prefs.mode === 'store' ? 'on' : '') + '">Store Order</button>' +
+      '<button data-act="mode" data-mode="az" class="' + (prefs.mode === 'az' ? 'on' : '') + '">A–Z</button>';
+    $('ctrl').classList.toggle('adding', !!ui.addOpen);
+
+    var html = '';
+    if (!toGet.length) {
+      html = '<div class="card"><div class="empty">' + (inCart.length ? 'Everything Is In The Cart' : 'Nothing On The List Yet') + '</div></div>';
+    } else if (prefs.mode === 'az') {
+      html = '<div class="card">' + toGet.sort(byName).map(function (x) { return rowHtml(x, true); }).join('') + '</div>';
+    } else if (!prefs.headings) {
+      html = '<div class="card">' + storeSort(toGet).map(function (x) { return rowHtml(x); }).join('') + '</div>';
+    } else {
+      storeSort(toGet);
+      html = '<div class="card pad">';
+      st.sections.forEach(function (sec) {
+        var g = toGet.filter(function (x) { return x.sec === sec; });
+        if (!g.length) { return; }
+        html += '<div class="sechead"><h3>' + esc(sec) + '</h3><span>' + g.length + '</span></div>' + g.map(function (x) { return rowHtml(x); }).join('');
+      });
+      html += '</div>';
+    }
+    $('list').innerHTML = html;
+
+    $('cart').innerHTML = inCart.length ? '<section class="cart"><div class="sechead grey" style="padding:6px 0 2px"><h3>In Cart · ' + inCart.length + '</h3>' +
+      '<button class="link" data-act="clear">' + (armed('clear') ? 'Tap Again To Clear' : 'Clear') + '</button></div>' +
+      inCart.map(function (x) {
+        return '<div class="row"><button class="rowmain" data-act="check" data-id="' + x.id + '"><span class="done" aria-hidden="true">' + I.check + '</span>' +
+          '<span class="nm">' + esc(x.name) + (x.n > 1 ? ' · ' + x.n : '') + '</span></button>' + avatar(st.checked[x.id].by, true) + '</div>';
+      }).join('') + '</section>' : '';
+  }
+
+  function rSuggest() {
+    var box = $('suggest');
+    if (!box) { return; }
+    var q = GL.norm(GL.parseAdd(ui.addText).name);
+    if (!q) { box.classList.add('hide'); box.innerHTML = ''; return; }
+    var ids = Object.keys(st.items).filter(function (id) { return GL.norm(st.items[id].name).indexOf(q) !== -1; });
+    ids.sort(function (a, b) {
+      var A = GL.norm(st.items[a].name), B = GL.norm(st.items[b].name);
+      return (A.indexOf(q) === 0 ? 0 : 1) - (B.indexOf(q) === 0 ? 0 : 1) || A.localeCompare(B);
+    });
+    // Fit as many as there's room for above the add field (it sits near the top, clear of the keyboard).
+    var room = Math.floor(($('ctrl').getBoundingClientRect().top - 16) / 49);
+    ids = ids.slice(0, Math.max(2, Math.min(5, room)));
+    if (!ids.length) { box.classList.add('hide'); box.innerHTML = ''; return; }
+    box.classList.remove('hide');
+    box.innerHTML = ids.map(function (id) {
+      var on = T[id] && !st.checked[id];
+      return '<button class="sugg" type="button" data-act="sugg" data-id="' + id + '"><span>' + esc(st.items[id].name) + '</span>' +
+        '<span class="tag' + (on ? '' : ' go') + '">' + (on ? 'On List · Add 1 More' : 'Add') + '</span></button>';
+    }).join('');
+  }
+
+  function addTyped(text) {
+    var p = GL.parseAdd(text);
+    if (!p.name) { return; }
+    var existing = GL.findLoose(st, p.name);
+    var id = existing || uid('i');
+    send({ type: 'add', id: id, name: p.name, qty: p.qty });
+    render();
+  }
+
+  /* --- all items --- */
+  function rAll() {
+    var on = Object.keys(T).length;
+    $('allSub').textContent = Object.keys(st.items).length + ' Items · ' + on + ' On List';
+    $('allEditBtn').textContent = ui.allEdit ? 'Done' : 'Edit';
+    var q = GL.norm(ui.search);
+    var html = '', addRow = '';
+    if (q && !GL.findByName(st, ui.search)) {
+      addRow = '<div class="card"><button class="listbtn" data-act="addSearch"><span class="grow">Add “' + esc(GL.titleCase(ui.search)) + '”<small>New Item · ' +
+        esc(GL.guessSection(ui.search, st.sections)) + '</small></span><span class="plus" aria-hidden="true">' + I.plusW + '</span></button></div>';
+    }
+    var any = false;
+    var body = '';
+    var counts = st.counts || {};
+    var sortBtn = function (key, label) {
+      return '<button data-act="allSort" data-sort="' + key + '" class="' + (prefs.allSort === key ? 'on' : '') + '">' + label + '</button>';
+    };
+    $('allSeg').innerHTML = sortBtn('most', 'Most Bought') + sortBtn('az', 'A–Z') + sortBtn('section', 'By Section');
+    var itemRow = function (x, sub) {
+      if (ui.allEdit && ui.itemEdit === x.id) { return editorHtml(x.id); }
+      var right = ui.allEdit ? '<span class="tag go">Edit</span>'
+        : (T[x.id] ? '<span class="pill">' + I.checkG + 'On List</span>' : '<span class="plus" aria-hidden="true">' + I.plusW + '</span>');
+      return '<button class="listbtn" data-act="' + (ui.allEdit ? 'itemEdit' : 'toggleList') + '" data-id="' + x.id + '"><span class="grow">' + esc(x.name) +
+        (sub ? '<small>' + sub + '</small>' : '') + '</span>' + right + '</button>';
+    };
+    if (prefs.allSort === 'most' || prefs.allSort === 'az') {
+      var most = prefs.allSort === 'most';
+      var flat = Object.keys(st.items).filter(function (id) { return !q || GL.norm(st.items[id].name).indexOf(q) !== -1; })
+        .map(function (id) { return { id: id, name: st.items[id].name, c: counts[id] || 0 }; })
+        .sort(function (a, b) { return (most ? b.c - a.c : 0) || a.name.localeCompare(b.name); });
+      if (flat.length) {
+        any = true;
+        body = flat.map(function (x) {
+          return itemRow(x, most ? (x.c ? 'Bought ' + x.c + (x.c === 1 ? ' Time' : ' Times') : 'Not Bought Yet') : '');
+        }).join('');
+      }
+    } else st.sections.forEach(function (sec) {
+      var g = Object.keys(st.items).filter(function (id) {
+        return st.items[id].sec === sec && (!q || GL.norm(st.items[id].name).indexOf(q) !== -1);
+      }).map(function (id) { return { id: id, name: st.items[id].name }; }).sort(byName);
+      if (!g.length) { return; }
+      any = true;
+      body += '<div class="sechead"><h3>' + esc(sec) + '</h3><span>' + g.length + '</span></div>';
+      body += g.map(function (x) { return itemRow(x); }).join('');
+    });
+    html += (any ? '<div class="card pad">' + body + '</div>' : '') + addRow;
+    if (!any && !addRow) { html = '<div class="card"><div class="empty">No Matches</div></div>'; }
+    $('allList').innerHTML = html;
+  }
+
+  function editorHtml(id) {
+    var it = st.items[id];
+    return '<div class="editor"><label><span class="sr">Item Name</span><input id="editName" type="text" value="' + esc(it.name) + '" autocapitalize="words"></label>' +
+      '<label><span class="sr">Section</span><select id="editSec">' + st.sections.map(function (s) {
+        return '<option' + (s === it.sec ? ' selected' : '') + '>' + esc(s) + '</option>';
+      }).join('') + '</select></label>' +
+      '<div class="btns"><button class="del' + (armed('del' + id) ? ' armed' : '') + '" data-act="itemDelete" data-id="' + id + '">' + (armed('del' + id) ? 'Tap Again' : 'Delete') + '</button>' +
+      '<button data-act="itemCancel">Cancel</button><button class="save" data-act="itemSave" data-id="' + id + '">Save</button></div></div>';
+  }
+
+  /* --- meals --- */
+  function rPicker() {
+    var q = GL.norm(ui.mealSearch);
+    var ids = Object.keys(st.meals).filter(function (m) { return !st.active[m] && (!q || GL.norm(st.meals[m].name).indexOf(q) !== -1); })
+      .sort(function (a, b) { return st.meals[a].name.localeCompare(st.meals[b].name); });
+    var html = '', addRow = '';
+    if (q && !GL.findMealByName(st, ui.mealSearch)) {
+      addRow = '<button class="listbtn" data-act="newMeal"><span class="grow">Add “' + esc(GL.titleCase(ui.mealSearch)) + '”<small>New Meal For This Week</small></span><span class="plus" aria-hidden="true">' + I.plusW + '</span></button>';
+    }
+    html += ids.map(function (m) {
+      var n = st.meals[m].ing.length;
+      return '<button class="listbtn" data-act="pickMeal" data-id="' + m + '"><span class="grow">' + esc(st.meals[m].name) +
+        '<small>' + (n ? n + (n === 1 ? ' Ingredient' : ' Ingredients') : 'No Ingredients Yet') + '</small></span>' + I.right + '</button>';
+    }).join('') + addRow;
+    if (!html) { html = '<div class="empty">' + (q ? 'Already On This Week\'s List' : 'Every Saved Meal Is On This Week\'s List') + '</div>'; }
+    $('savedMeals').innerHTML = html;
+  }
+
+  function rAddMeal() {
+    var meal = st.meals[ui.addMealId];
+    if (!meal) { go('picker'); return; }
+    $('addTitle').textContent = 'Add ' + meal.name;
+    var count = 0;
+    $('addRows').innerHTML = meal.ing.map(function (p) {
+      var id = p[0], n = p[1], on = !!ui.ticks[id], have = (T[id] && !st.checked[id]) ? T[id] : 0;
+      if (on) { count++; }
+      var note = have && on ? 'On List · ' + have + ' → ' + (have + n) : (have ? 'Already On List' : '');
+      return '<button class="listbtn" data-act="tick" data-id="' + id + '" role="checkbox" aria-checked="' + on + '">' +
+        '<span class="box' + (on ? ' on' : '') + '" aria-hidden="true">' + (on ? I.check : '') + '</span>' +
+        '<span class="grow">' + esc(st.items[id].name) + (note ? '<small class="warn">' + note + '</small>' : '') + '</span>' +
+        '<span class="tag">' + (n > 1 ? n : '') + '</span></button>';
+    }).join('');
+    $('addBtn').textContent = 'Add To List · ' + count + (count === 1 ? ' Item' : ' Items');
+  }
+
+  function rMeal() {
+    var meal = st.meals[ui.viewMealId];
+    if (!meal || !st.active[ui.viewMealId]) { go('main'); return; }
+    $('viewTitle').textContent = meal.name;
+    var chosen = st.active[ui.viewMealId];
+    $('viewRows').innerHTML = meal.ing.length ? meal.ing.map(function (p) {
+      var id = p[0];
+      var s = !chosen[id] ? 'Not Added' : (st.checked[id] ? 'In Cart' : 'On List');
+      return '<div class="row"><span class="nm" style="flex:1;min-height:52px;justify-content:center">' + esc(st.items[id].name) + '</span><span class="tag">' + s + '</span></div>';
+    }).join('') : '<div class="empty">No Ingredients Saved For This Meal</div>';
+    $('removeMealBtn').textContent = armed('rm') ? 'Tap Again' : 'Remove From Week';
+    $('removeMealBtn').classList.toggle('armed', armed('rm'));
+  }
+
+  function openIng(mealId, from) {
+    var meal = st.meals[mealId];
+    ui.ingMealId = mealId; ui.ingBack = from; ui.ingName = meal.name; ui.ingSearch = '';
+    ui.ingSel = meal.ing.map(function (p) { return [p[0], p[1]]; });
+    go('ing', -1);
+  }
+
+  function selN(id) { for (var i = 0; i < ui.ingSel.length; i++) { if (ui.ingSel[i][0] === id) { return ui.ingSel[i]; } } return null; }
+
+  function rIng() {
+    if (!st.meals[ui.ingMealId]) { go('main'); return; }
+    var sel = ui.ingSel.filter(function (p) { return st.items[p[0]]; });
+    $('ingChosen').innerHTML = '<div class="sechead"><h3>In This Meal</h3><span>' + sel.length + '</span></div>' + (sel.length ? sel.map(function (p) {
+      return '<div class="row"><button class="rowmain" data-act="ingToggle" data-id="' + p[0] + '"><span class="box on" aria-hidden="true">' + I.check + '</span><span class="nm">' + esc(st.items[p[0]].name) + '</span></button>' +
+        '<div class="stepper"><button class="sb" data-act="ingDec" data-id="' + p[0] + '" aria-label="Decrease Quantity">' + I.dec + '</button><span class="sn" style="display:flex;align-items:center;justify-content:center">' + p[1] + '</span>' +
+        '<button class="sb" data-act="ingInc" data-id="' + p[0] + '" aria-label="Increase Quantity">' + I.incG + '</button></div></div>';
+    }).join('') : '<div class="empty">Tap Items Below To Add Them</div>');
+    $('deleteMealBtn').textContent = armed('delMeal') ? 'Tap Again To Delete Meal' : 'Delete Meal';
+    $('deleteMealBtn').classList.toggle('armed', armed('delMeal'));
+    rIngAll();
+  }
+
+  function rIngAll() {
+    var q = GL.norm(ui.ingSearch);
+    var ids = Object.keys(st.items).filter(function (id) { return !selN(id) && (!q || GL.norm(st.items[id].name).indexOf(q) !== -1); })
+      .sort(function (a, b) { return st.items[a].name.localeCompare(st.items[b].name); });
+    var shown = ids.slice(0, q ? 60 : 300);
+    $('ingAll').innerHTML = '<div class="sechead"><h3>' + (q ? 'Matches' : 'All Items') + '</h3><span>' + ids.length + '</span></div>' + (shown.length ? shown.map(function (id) {
+      return '<button class="listbtn" data-act="ingToggle" data-id="' + id + '"><span class="box" aria-hidden="true"></span><span class="grow">' + esc(st.items[id].name) +
+        '<small>' + esc(st.items[id].sec) + '</small></span></button>';
+    }).join('') : '<div class="empty">No Other Matches. New Items Can Be Added From The List Screen.</div>');
+  }
+
+  /* --- settings --- */
+  function rThemes() {
+    var t = prefs.theme || { id: 'midnight' };
+    var html = '<div class="themes">' + THEMES.map(function (x) {
+      return '<button class="theme' + (t.id === x.id ? ' on' : '') + '" data-act="theme" data-id="' + x.id + '" aria-label="' + x.name + ' Colors">' +
+        '<span class="dot" style="background:' + x.bg + '"><i style="background:' + x.accent + '"></i></span>' + x.name + '</button>';
+    }).join('') + '</div>';
+    var cur = THEMES.filter(function (x) { return x.id === t.id; })[0];
+    var cbg = t.id === 'custom' ? t.bg : (cur || THEMES[0]).bg, cac = t.id === 'custom' ? t.accent : (cur || THEMES[0]).accent;
+    var mode = t.id === 'custom' ? (t.text || 'auto') : 'auto';
+    html += '<div class="custom"><h4>' + (t.id === 'custom' ? 'Custom Colors' : 'Make Your Own') + '</h4><div class="pickers">' +
+      '<label class="picker"><input type="color" data-theme="bg" value="' + cbg.toLowerCase() + '">Background</label>' +
+      '<label class="picker"><input type="color" data-theme="accent" value="' + cac.toLowerCase() + '">Highlight</label></div>' +
+      '<div class="textrow"><span>Text Color</span><div class="seg sm three-sm">' +
+      ['auto', 'light', 'dark'].map(function (m) {
+        return '<button data-act="textMode" data-mode="' + m + '" class="' + (mode === m && t.id === 'custom' ? 'on' : (m === 'auto' && t.id !== 'custom' ? 'on' : '')) + '">' + ({ auto: 'Auto', light: 'Light', dark: 'Dark' })[m] + '</button>';
+      }).join('') + '</div></div></div>';
+    $('themeCard').innerHTML = html;
+  }
+
+  function customFrom() {
+    var t = prefs.theme || {};
+    if (t.id === 'custom') { return { id: 'custom', bg: t.bg, accent: t.accent, text: t.text || 'auto' }; }
+    var cur = THEMES.filter(function (x) { return x.id === t.id; })[0] || THEMES[0];
+    return { id: 'custom', bg: cur.bg, accent: cur.accent, text: 'auto' };
+  }
+  function setTheme(t, rerender) {
+    savePref('theme', t);
+    applyTheme(t);
+    if (rerender) { render(); }
+  }
+
+  function rSyncLog() {
+    var log = lsGet('errlog', []) || [];
+    var fmt = function (t) { var d = new Date(t); return d.toLocaleDateString([], { month: 'short', day: 'numeric' }) + ' ' + d.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' }); };
+    $('syncLog').innerHTML = log.length
+      ? log.map(function (e) {
+          return '<div class="row" style="padding:8px 0;align-items:flex-start"><span class="nm" style="padding:0"><span style="font-size:14px">' + esc(e.kind) + ' · ' + esc(fmt(e.t)) +
+            (e.hidden ? ' · In Background' : '') + (e.online === false ? ' · Phone Offline' : '') + '</span><small style="word-break:break-word">' + esc(e.msg) + '</small></span></div>';
+        }).join('') + '<button class="link" data-act="clearLog" style="padding:0">Clear</button>'
+      : '<div class="empty">No Sync Problems Recorded</div>';
+  }
+
+  function rSettings() {
+    rThemes();
+    rSyncLog();
+    $('meName').textContent = me;
+    $('secToggle').innerHTML = '<button class="switchrow setrow" data-act="headings" role="switch" aria-checked="' + prefs.headings + '"><span>Show Sections In Store Order</span>' +
+      '<span class="sw' + (prefs.headings ? ' on' : '') + '" aria-hidden="true"><i></i></span></button>';
+    var n = st.sections.length;
+    $('secList').innerHTML = st.sections.map(function (s, i) {
+      return '<div class="secrow"><span class="num">' + (i + 1) + '</span><span>' + esc(s) + '</span>' +
+        '<button class="arrow" data-act="secUp" data-i="' + i + '" aria-label="Move ' + esc(s) + ' Up"' + (i === 0 ? ' disabled' : '') + '>' + I.up + '</button>' +
+        '<button class="arrow" data-act="secDown" data-i="' + i + '" aria-label="Move ' + esc(s) + ' Down"' + (i === n - 1 ? ' disabled' : '') + '>' + I.dn + '</button></div>';
+    }).join('');
+  }
+
+  /* ---------- taps ---------- */
+  var acts = {
+    check: function (b) { send({ type: 'check', id: b.dataset.id, on: !st.checked[b.dataset.id], by: me, t: Date.now() }); },
+    inc: function (b) { warm(b.dataset.id); send({ type: 'bump', id: b.dataset.id, d: 1 }); },
+    dec: function (b) {
+      var id = b.dataset.id;
+      if ((T[id] || 0) <= 1) { armRemove(id); return; }
+      warm(id); send({ type: 'bump', id: id, d: -1 });
+    },
+    rmItem: function (b) { ui.rmArmed = null; send({ type: 'remove', id: b.dataset.id }); },
+    addOpen: function () { ui.addOpen = true; window.scrollTo(0, 0); render(); $('addInput').focus(); },
+    addClose: function () { ui.addOpen = false; ui.addText = ''; $('addInput').value = ''; $('addInput').blur(); rSuggest(); render(); },
+    mode: function (b) { savePref('mode', b.dataset.mode); render(); },
+    reload: function () { window.location.reload(); },
+    retry: function () { fails = 0; setStatus(''); if (pending.length) { flush(); } else { poll(); } },
+    clearLog: function () { lsSet('errlog', []); render(); },
+    theme: function (b) { setTheme({ id: b.dataset.id }, true); },
+    textMode: function (b) { var t = customFrom(); t.text = b.dataset.mode; setTheme(t, true); },
+    headings: function () { savePref('headings', !prefs.headings); render(); },
+    meals: function () { savePref('mealsOpen', !prefs.mealsOpen); render(); },
+    clear: function () { if (armed('clear')) { ui.armed = null; send({ type: 'clear' }); } else { arm('clear'); } },
+    sugg: function (b) {
+      send({ type: 'add', id: b.dataset.id, name: st.items[b.dataset.id].name, qty: GL.parseAdd(ui.addText).qty });
+      ui.addText = ''; $('addInput').value = ''; rSuggest(); render();
+    },
+    all: function () { ui.search = ''; ui.allEdit = false; ui.itemEdit = null; go('all', -1); },
+    home: function () { go('main', ui.screen === 'picker' ? -1 : 1); },
+    settings: function () { go('settings', -1); },
+    toggleList: function (b) {
+      var id = b.dataset.id;
+      if (T[id]) { send({ type: 'remove', id: id }); } else { send({ type: 'add', id: id, name: st.items[id].name, qty: 1 }); }
+    },
+    addSearch: function () {
+      var p = GL.parseAdd(ui.search);
+      if (!p.name) { return; }
+      send({ type: 'add', id: uid('i'), name: p.name, qty: p.qty });
+      ui.search = ''; $('search').value = ''; rAll();
+    },
+    allSort: function (b) { savePref('allSort', b.dataset.sort); ui.itemEdit = null; rAll(); window.scrollTo(0, 0); },
+    allEdit: function () { ui.allEdit = !ui.allEdit; ui.itemEdit = null; rAll(); },
+    itemEdit: function (b) { ui.itemEdit = b.dataset.id; ui.armed = null; rAll(); var n = $('editName'); if (n) { n.focus(); } },
+    itemCancel: function () { ui.itemEdit = null; rAll(); },
+    itemSave: function (b) {
+      var name = GL.titleCase($('editName').value), sec = $('editSec').value;
+      ui.itemEdit = null;
+      send({ type: 'editItem', id: b.dataset.id, name: name, sec: sec });
+    },
+    itemDelete: function (b) {
+      var key = 'del' + b.dataset.id;
+      if (armed(key)) { ui.armed = null; ui.itemEdit = null; send({ type: 'deleteItem', id: b.dataset.id }); } else { arm(key); }
+    },
+    picker: function () { if (ui.screen === 'main') { ui.mealSearch = ''; } go('picker', 1); },
+    newMeal: function () {
+      var name = GL.titleCase(ui.mealSearch);
+      if (!name) { return; }
+      var id = uid('m');
+      send({ type: 'newMeal', mealId: id, name: name });
+      send({ type: 'addMeal', mealId: id, ticks: {} });
+      ui.mealSearch = '';
+      go('main', -1);
+    },
+    pickMeal: function (b) {
+      var m = st.meals[b.dataset.id];
+      if (!m.ing.length) { send({ type: 'addMeal', mealId: b.dataset.id, ticks: {} }); go('main', -1); return; }
+      ui.addMealId = b.dataset.id; ui.ticks = {};
+      m.ing.forEach(function (p) { ui.ticks[p[0]] = true; });
+      go('addMeal', -1);
+    },
+    tick: function (b) { var id = b.dataset.id; if (ui.ticks[id]) { delete ui.ticks[id]; } else { ui.ticks[id] = true; } rAddMeal(); },
+    confirmAdd: function () { send({ type: 'addMeal', mealId: ui.addMealId, ticks: ui.ticks }); go('main', -1); },
+    openMeal: function (b) { ui.viewMealId = b.dataset.id; go('meal', -1); },
+    removeMeal: function () { if (armed('rm')) { send({ type: 'removeMeal', mealId: ui.viewMealId }); go('main', 1); } else { arm('rm'); } },
+    editIng: function (b) { openIng(b.dataset.from === 'meal' ? ui.viewMealId : ui.addMealId, b.dataset.from); },
+    ingBack: function () { go(ui.ingBack === 'addMeal' ? 'addMeal' : ui.ingBack === 'meal' ? 'meal' : 'main', 1); },
+    ingToggle: function (b) {
+      var id = b.dataset.id;
+      if (selN(id)) { ui.ingSel = ui.ingSel.filter(function (p) { return p[0] !== id; }); } else { ui.ingSel.push([id, 1]); }
+      rIng();
+    },
+    ingInc: function (b) { var p = selN(b.dataset.id); if (p) { p[1]++; rIng(); } },
+    ingDec: function (b) { var p = selN(b.dataset.id); if (p && p[1] > 1) { p[1]--; rIng(); } },
+    saveIng: function () {
+      var id = ui.ingMealId;
+      send({ type: 'saveMeal', mealId: id, name: GL.titleCase(ui.ingName) || st.meals[id].name, ing: ui.ingSel });
+      if (ui.ingBack === 'addMeal') {
+        ui.ticks = {};
+        ui.ingSel.forEach(function (p) { ui.ticks[p[0]] = true; });
+        ui.addMealId = id;
+        go(ui.ingSel.length ? 'addMeal' : 'picker', 1);
+      } else { go(ui.ingBack === 'meal' ? 'meal' : 'main', 1); }
+    },
+    deleteMeal: function () { if (armed('delMeal')) { send({ type: 'deleteMeal', mealId: ui.ingMealId }); go('main', 1); } else { arm('delMeal'); } },
+    secUp: function (b) { moveSec(+b.dataset.i, -1); },
+    secDown: function (b) { moveSec(+b.dataset.i, 1); },
+    changeName: function () { me = ''; lsSet('me', ''); setUrlName(''); built = null; render(); },
+    pickName: function (b) { chooseName(b.dataset.name); }
+  };
+
+  function moveSec(i, d) {
+    var s = st.sections.slice(), j = i + d;
+    if (j < 0 || j >= s.length) { return; }
+    var t = s[i]; s[i] = s[j]; s[j] = t;
+    send({ type: 'setSections', sections: s });
+  }
+
+  // Quantity buttons brighten for a few seconds after you use them.
+  var warmTimer = null;
+  // Tapping − at 1 turns the buttons into a red Remove for 3 seconds; tap it to take the item off the list.
+  var rmTimer = null;
+  function armRemove(id) {
+    ui.rmArmed = id;
+    clearTimeout(rmTimer);
+    rmTimer = setTimeout(function () { if (ui.rmArmed === id) { ui.rmArmed = null; render(); } }, 3000);
+    render();
+  }
+
+  function warm(id) {
+    ui.hot = id;
+    clearTimeout(warmTimer);
+    warmTimer = setTimeout(function () { ui.hot = null; render(); }, 3000);
+  }
+
+  document.addEventListener('click', function (e) {
+    var b = e.target.closest('[data-act]');
+    if (ui.rmArmed && (!b || b.dataset.act !== 'rmItem')) {
+      ui.rmArmed = null;
+      if (!b || b.dataset.act === 'check') { render(); return; }
+    }
+    if (!b || b.disabled || animating) { return; }
+    var fn = acts[b.dataset.act];
+    if (!fn) { return; }
+    e.preventDefault();
+    fn(b);
+  });
+
+  document.addEventListener('input', function (e) {
+    var k = e.target.getAttribute && e.target.getAttribute('data-theme');
+    if (!k) { return; }
+    var t = customFrom(); t[k] = e.target.value.toUpperCase();
+    prefs.theme = t; applyTheme(t);
+  });
+  document.addEventListener('change', function (e) {
+    var k = e.target.getAttribute && e.target.getAttribute('data-theme');
+    if (!k) { return; }
+    var t = customFrom(); t[k] = e.target.value.toUpperCase();
+    setTheme(t, true);
+  });
+
+  /* ---------- swipes: main ⇄ Add Meal (swipe right), main ⇄ All Items (swipe left) ---------- */
+  function swipeTarget(screen, dx) {
+    if (screen === 'main') { return dx > 0 ? 'picker' : 'all'; }
+    if (screen === 'picker' && dx < 0) { return 'main'; }
+    if (screen === 'all' && dx > 0) { return 'main'; }
+    return null;
+  }
+  var sw = null;
+  document.addEventListener('touchstart', function (e) {
+    sw = null;
+    var screen = me ? ui.screen : 'name';
+    if (animating || e.touches.length !== 1 || ['main', 'picker', 'all'].indexOf(screen) === -1) { return; }
+    if (e.target.closest('input, select, textarea, .editor')) { return; }
+    var t = e.touches[0];
+    sw = { x: t.clientX, y: t.clientY, t: Date.now(), lock: null, dx: 0, screen: screen };
+  }, { passive: true });
+  document.addEventListener('touchmove', function (e) {
+    if (!sw) { return; }
+    var t = e.touches[0], dx = t.clientX - sw.x, dy = t.clientY - sw.y;
+    if (!sw.lock) {
+      if (Math.abs(dx) < 10 && Math.abs(dy) < 10) { return; }
+      sw.lock = Math.abs(dx) > Math.abs(dy) * 1.3 ? 'h' : 'v';
+    }
+    if (sw.lock !== 'h') { return; }
+    e.preventDefault();
+    sw.dx = dx;
+    var eff = swipeTarget(sw.screen, dx) ? dx : dx * 0.2;
+    var app = $('app');
+    app.style.transition = 'none';
+    app.style.transform = 'translateX(' + eff + 'px)';
+    app.style.opacity = String(1 - Math.min(0.6, Math.abs(eff) / window.innerWidth * 0.9));
+  }, { passive: false });
+  function endSwipe() {
+    if (!sw) { return; }
+    var s = sw; sw = null;
+    if (s.lock !== 'h') { return; }
+    var app = $('app'), w = window.innerWidth;
+    var speed = Math.abs(s.dx) / Math.max(1, Date.now() - s.t);
+    var target = swipeTarget(s.screen, s.dx);
+    if (target && (Math.abs(s.dx) > w * 0.28 || (speed > 0.5 && Math.abs(s.dx) > 40))) {
+      if (target === 'all') { ui.search = ''; ui.allEdit = false; ui.itemEdit = null; }
+      if (target === 'picker') { ui.mealSearch = ''; }
+      if (target === 'main') { }
+      go(target, s.dx > 0 ? 1 : -1);
+    } else {
+      app.style.transition = 'transform 200ms cubic-bezier(0,0,.2,1), opacity 200ms';
+      app.style.transform = 'translateX(0)';
+      app.style.opacity = '1';
+      setTimeout(function () { if (!animating) { app.style.transition = ''; app.style.transform = ''; app.style.opacity = ''; } }, 210);
+    }
+  }
+  document.addEventListener('touchend', endSwipe);
+  document.addEventListener('touchcancel', endSwipe);
+
+  document.addEventListener('visibilitychange', function () {
+    if (!document.hidden) { fails = 0; polling = false; if (pending.length) { flush(); } else { poll(); } }
+  });
+  setInterval(poll, 2500);
+
+  function start(json) {
+    if (server) { return; }
+    server = JSON.parse(json);
+    remember(json);
+    pending = lsGet('pending', []) || [];
+    recompute();
+    // If this phone's name never made it into the shared list (e.g. an earlier save failed), add it now.
+    if (me && st.users.indexOf(me) === -1) { send({ type: 'addUser', name: me }); }
+    if (me) { loadPrefs(); if (!URL_ME) { setUrlName(me); } }
+    render();
+    flush();
+  }
+
+  // The list normally arrives with the page. If it didn't, ask for it, and keep asking until it comes.
+  function fetchStart(attempt) {
+    if (server) { return; }
+    var tries = attempt || 1;
+    var timer = setTimeout(function () {
+      if (server) { return; }
+      $('app').innerHTML = '<div class="loading">Still Loading…<br><button class="link" data-act="reload">Tap To Try Again</button></div>';
+      fetchStart(tries + 1);
+    }, 10000);
+    google.script.run
+      .withSuccessHandler(function (json) { clearTimeout(timer); if (json) { start(json); } })
+      .withFailureHandler(function (err) {
+        clearTimeout(timer);
+        logError('Load', String((err && err.message) || '(No Message)'));
+        $('app').innerHTML = '<div class="loading">Couldn\'t Load The List Yet. Trying Again…<br><small>' + esc(err && err.message) + '</small></div>';
+        setTimeout(function () { fetchStart(tries + 1); }, 2500);
+      })
+      .getState(0);
+  }
+
+  // Start from the list that came with the page; or, in the phone app, from the last copy kept on the phone
+  // (so it opens instantly, even with no signal) and then catch up.
+  var lastCopy = lsGet('lastState', '');
+  if (BOOT) { try { start(BOOT); } catch (e) { server = null; fetchStart(); } }
+  else if (lastCopy) { try { start(lastCopy); setTimeout(poll, 50); } catch (e) { server = null; fetchStart(); } }
+  else { fetchStart(); }
+})();
+</script>
+<script>
+if ('serviceWorker' in navigator) { window.addEventListener('load', function () { navigator.serviceWorker.register('sw.js').catch(function () {}); }); }
+</script>
+</body>
+</html>
