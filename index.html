@@ -50,6 +50,7 @@
   .sq{flex:none;width:52px;min-height:52px;background:var(--card);border:1px solid var(--edge);border-radius:14px;display:flex;align-items:center;justify-content:center}
   .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
   .ctrl{position:relative}
+  .ingctrl{position:relative}
   .suggest{position:absolute;left:0;right:0;bottom:calc(100% + 8px);z-index:20;display:flex;flex-direction:column-reverse;border:1px solid var(--edge);box-shadow:0 -8px 28px rgba(0,0,0,.35)}
   .sugg{width:100%;min-height:48px;display:flex;align-items:center;justify-content:space-between;gap:10px;background:none;border:0;border-bottom:1px solid var(--line);padding:0;text-align:left;font-size:16px}
   .sugg:first-child{border-bottom:0}
@@ -934,7 +935,8 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
         '<div class="addrow"><label class="field"><span class="sr">Meal Name</span><input id="ingName" type="text" placeholder="Meal Name" autocomplete="off" autocapitalize="words"></label>' +
         '<button class="savebtn" data-act="saveIng">Save</button></div>' +
         '<div class="card pad" id="ingChosen"></div>' +
-        '<label class="field">' + I.search + '<span class="sr">Find Ingredients</span><input id="ingSearch" type="text" placeholder="Find Ingredients" autocomplete="off" autocapitalize="words"></label>' +
+        '<div class="ingctrl" id="ingCtrl"><label class="field">' + I.search + '<span class="sr">Find Ingredients</span><input id="ingSearch" type="text" placeholder="Find Ingredients" autocomplete="off" autocapitalize="words" enterkeyhint="done"></label>' +
+        '<div class="card suggest hide" id="ingSuggest"></div></div>' +
         '<div class="card pad" id="ingAll"></div>' +
         '<button class="ghost danger" data-act="deleteMeal" id="deleteMealBtn"></button>';
     }
@@ -1005,7 +1007,15 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
       var n = $('ingName'), q = $('ingSearch');
       n.value = ui.ingName; q.value = ui.ingSearch;
       n.addEventListener('input', function () { ui.ingName = n.value; });
-      q.addEventListener('input', function () { ui.ingSearch = q.value; rIngAll(); });
+      q.addEventListener('input', function () { ui.ingSearch = q.value; rIngSuggest(); });
+      // Bring the field up near the top so the matches have room above it, clear of the keyboard.
+      q.addEventListener('focus', function () {
+        var top = q.getBoundingClientRect().top + window.scrollY - 300;
+        if (Math.abs(window.scrollY - top) > 20) { window.scrollTo(0, Math.max(0, top)); }
+      });
+      q.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter') { e.preventDefault(); var first = document.querySelector('#ingSuggest .sugg'); if (first) { first.click(); } }
+      });
     }
   }
 
@@ -1086,16 +1096,32 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
       }).join('') + '</section>' : '';
   }
 
+  /* Search ranking: the exact name first ("Onion" before "Green Onion"), then names that start with what you typed,
+     then names with a word that starts with it, then anything containing it. Ties go to what you buy most, then shorter names. */
+  function matchScore(name, q) {
+    var n = GL.norm(name);
+    if (n === q || n === q + 's' || n === q + 'es' || n + 's' === q || n + 'es' === q) { return 0; }
+    if (n.indexOf(q) === 0) { return 1; }
+    if ((' ' + n.replace(/[()\-–,]/g, ' ')).indexOf(' ' + q) !== -1) { return 2; }
+    if (n.indexOf(q) !== -1) { return 3; }
+    return -1;
+  }
+  function rankItems(ids, q) {
+    var counts = st.counts || {};
+    return ids.map(function (id) { return { id: id, s: matchScore(st.items[id].name, q) }; })
+      .filter(function (x) { return x.s >= 0; })
+      .sort(function (a, b) {
+        var A = st.items[a.id].name, B = st.items[b.id].name;
+        return a.s - b.s || (counts[b.id] || 0) - (counts[a.id] || 0) || A.length - B.length || A.localeCompare(B);
+      }).map(function (x) { return x.id; });
+  }
+
   function rSuggest() {
     var box = $('suggest');
     if (!box) { return; }
     var q = GL.norm(GL.parseAdd(ui.addText).name);
     if (!q) { box.classList.add('hide'); box.innerHTML = ''; return; }
-    var ids = Object.keys(st.items).filter(function (id) { return GL.norm(st.items[id].name).indexOf(q) !== -1; });
-    ids.sort(function (a, b) {
-      var A = GL.norm(st.items[a].name), B = GL.norm(st.items[b].name);
-      return (A.indexOf(q) === 0 ? 0 : 1) - (B.indexOf(q) === 0 ? 0 : 1) || A.localeCompare(B);
-    });
+    var ids = rankItems(Object.keys(st.items), q);
     // Fit as many as there's room for above the add field (it sits near the top, clear of the keyboard).
     var room = Math.floor(($('ctrl').getBoundingClientRect().top - 16) / 49);
     ids = ids.slice(0, Math.max(2, Math.min(5, room)));
@@ -1180,8 +1206,11 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
   /* --- meals --- */
   function rPicker() {
     var q = GL.norm(ui.mealSearch);
-    var ids = Object.keys(st.meals).filter(function (m) { return !st.active[m] && (!q || GL.norm(st.meals[m].name).indexOf(q) !== -1); })
-      .sort(function (a, b) { return st.meals[a].name.localeCompare(st.meals[b].name); });
+    var ids = Object.keys(st.meals).filter(function (m) { return !st.active[m] && (!q || matchScore(st.meals[m].name, q) >= 0); })
+      .sort(function (a, b) {
+        var A = st.meals[a].name, B = st.meals[b].name;
+        return (q ? matchScore(A, q) - matchScore(B, q) || A.length - B.length : 0) || A.localeCompare(B);
+      });
     var html = '', addRow = '';
     if (q && !GL.findMealByName(st, ui.mealSearch)) {
       addRow = '<button class="listbtn" data-act="newMeal"><span class="grow">Add “' + esc(GL.titleCase(ui.mealSearch)) + '”<small>New Meal For This Week</small></span><span class="plus" aria-hidden="true">' + I.plusW + '</span></button>';
@@ -1256,13 +1285,28 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
   }
 
   function rIngAll() {
-    var q = GL.norm(ui.ingSearch);
-    var ids = Object.keys(st.items).filter(function (id) { return !selN(id) && (!q || GL.norm(st.items[id].name).indexOf(q) !== -1); })
+    var ids = Object.keys(st.items).filter(function (id) { return !selN(id); })
       .sort(function (a, b) { return st.items[a].name.localeCompare(st.items[b].name); });
-    var shown = ids.slice(0, q ? 60 : 300);
-    $('ingAll').innerHTML = '<div class="sechead"><h3>' + (q ? 'Matches' : 'All Items') + '</h3><span>' + ids.length + '</span></div>' + (shown.length ? shown.map(function (id) {
+    $('ingAll').innerHTML = '<div class="sechead"><h3>All Items</h3><span>' + ids.length + '</span></div>' + ids.map(function (id) {
       return '<button class="listbtn" data-act="ingToggle" data-id="' + id + '"><span class="box" aria-hidden="true"></span><span class="grow">' + esc(st.items[id].name) + '</span></button>';
-    }).join('') : '<div class="empty">No Other Matches. New Items Can Be Added From The List Screen.</div>');
+    }).join('');
+    rIngSuggest();
+  }
+
+  function rIngSuggest() {
+    var box = $('ingSuggest');
+    if (!box) { return; }
+    var q = GL.norm(ui.ingSearch);
+    var ids = q ? rankItems(Object.keys(st.items), q) : [];
+    var room = Math.floor(($('ingCtrl').getBoundingClientRect().top - 16) / 49);
+    ids = ids.slice(0, Math.max(2, Math.min(5, room)));
+    if (!ids.length) { box.classList.add('hide'); box.innerHTML = ''; return; }
+    box.classList.remove('hide');
+    box.innerHTML = ids.map(function (id) {
+      var inMeal = !!selN(id);
+      return '<button class="sugg" type="button" data-act="ingSugg" data-id="' + id + '"><span>' + esc(st.items[id].name) + '</span>' +
+        '<span class="tag' + (inMeal ? '' : ' go') + '">' + (inMeal ? 'In Meal · Add 1 More' : 'Add') + '</span></button>';
+    }).join('');
   }
 
   /* --- settings --- */
@@ -1423,6 +1467,12 @@ window.CARROT_SVG = "<svg class=\"carrot\" width=\"48\" height=\"48\" viewBox=\"
     editIng: function (b) { openIng(b.dataset.from === 'meal' ? ui.viewMealId : ui.addMealId, b.dataset.from); },
     ingBack: function () { go(ui.ingBack === 'addMeal' ? 'addMeal' : ui.ingBack === 'meal' ? 'meal' : ui.ingBack === 'picker' ? 'picker' : 'main', 1); },
     editMeal: function (b) { openIng(b.dataset.id, 'picker'); },
+    ingSugg: function (b) {
+      var id = b.dataset.id, p = selN(id);
+      if (p) { p[1]++; warm(id); } else { ui.ingSel.push([id, 1]); }
+      ui.ingSearch = ''; $('ingSearch').value = '';
+      rIng();
+    },
     ingToggle: function (b) {
       var id = b.dataset.id;
       if (selN(id)) { ui.ingSel = ui.ingSel.filter(function (p) { return p[0] !== id; }); } else { ui.ingSel.push([id, 1]); }
